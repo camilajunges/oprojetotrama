@@ -19,6 +19,12 @@ const TramaData = {
       email: "oprojetotrama@gmail.com",
       // address: "Rua Harmonia, 128 - Vila Madalena, São Paulo - SP",
       // cnpj: "48.291.802/0001-94"
+    },
+    // Conta Oficial da Administradora (Defina aqui ou mude pelo painel do site)
+    adminAccount: {
+      email: "oprojetotrama@gmail.com",
+      password: "admin", // Também aceita "trama2026"
+      name: "Camila Guimarães (Proprietária)"
     }
   },
 

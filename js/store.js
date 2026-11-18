@@ -203,10 +203,13 @@ const TramaStore = {
         if (parsed && parsed.email && parsed.password) return parsed;
       } catch (e) {}
     }
-    // Conta padrão configurada da criadora / ateliê
+    // Conta padrão configurada no data.js ou padrão do ateliê
+    if (typeof TramaData !== 'undefined' && TramaData.brand && TramaData.brand.adminAccount) {
+      return TramaData.brand.adminAccount;
+    }
     return {
       email: "oprojetotrama@gmail.com",
-      password: "admin", // Também aceita "trama2026"
+      password: "admin",
       name: "Camila Guimarães (Proprietária)"
     };
   },
