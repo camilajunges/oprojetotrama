@@ -231,6 +231,10 @@ const TramaData = {
 // Exportar para escopo global com total compatibilidade
 if (typeof window !== 'undefined') {
   window.TramaData = TramaData;
-} else if (typeof globalThis !== 'undefined') {
+}
+if (typeof globalThis !== 'undefined') {
   globalThis.TramaData = TramaData;
+}
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = TramaData;
 }

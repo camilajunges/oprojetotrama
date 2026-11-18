@@ -10,6 +10,7 @@ const TramaStore = {
     wishlist: [],
     user: null,
     orders: [],
+    customers: [],            // Banco de dados de clientes cadastradas
     coupon: null,
     currentAestheticsFilter: 'todos',
     weeklyCapacity: {
@@ -187,9 +188,97 @@ const TramaStore = {
         ];
         this.saveOrders();
       }
+
+      // 7. Carregar Clientes Salvas no Banco Local / Cache
+      const savedCustomers = this._getStorage('trama_customers');
+      if (savedCustomers) {
+        try { this.state.customers = JSON.parse(savedCustomers); } catch (e) { this.state.customers = []; }
+      } else {
+        this.state.customers = [
+          {
+            id: 'usr_cliente_demo',
+            name: 'Isadora Martins',
+            email: 'cliente@exemplo.com.br',
+            phone: '(11) 98765-4321',
+            role: 'client',
+            created_at: new Date().toISOString(),
+            busto: 92,
+            cintura: 72,
+            quadril: 101,
+            altura: 168,
+            observacoes: 'Preferência por caimento solto na linha do quadril.',
+            total_orders: 1
+          }
+        ];
+        this._setStorage('trama_customers', JSON.stringify(this.state.customers));
+      }
+
+      // Sincronizar com o Banco de Dados Relacional (SQLite) em segundo plano
+      this.syncFromDatabase();
     } catch (e) {
       console.warn("Storage warning:", e);
     }
+  },
+
+  // --------------------------------------------------------------------------
+  // INTEGRAÇÃO COM BANCO DE DADOS (REST API / SQLITE)
+  // --------------------------------------------------------------------------
+  apiBaseUrl: (typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http')) 
+    ? window.location.origin 
+    : 'http://localhost:3000',
+
+  syncFromDatabase: async function() {
+    if (typeof fetch === 'undefined') return;
+    try {
+      // 1. Sincronizar Produtos do Banco SQLite
+      const prodRes = await fetch(`${this.apiBaseUrl}/api/products`);
+      if (prodRes.ok) {
+        const dbProducts = await prodRes.json();
+        if (Array.isArray(dbProducts) && dbProducts.length > 0) {
+          TramaData.products = dbProducts;
+          this.saveCatalog(false);
+        }
+      }
+
+      // 2. Sincronizar Lookbook do Banco SQLite
+      const lookRes = await fetch(`${this.apiBaseUrl}/api/lookbook`);
+      if (lookRes.ok) {
+        const dbLooks = await lookRes.json();
+        if (Array.isArray(dbLooks) && dbLooks.length > 0) {
+          TramaData.lookbook = dbLooks;
+          this.saveLookbook(false);
+        }
+      }
+
+      // 3. Sincronizar Lista de Clientes do Banco SQLite
+      const custRes = await fetch(`${this.apiBaseUrl}/api/customers`);
+      if (custRes.ok) {
+        const dbCustomers = await custRes.json();
+        if (Array.isArray(dbCustomers) && dbCustomers.length > 0) {
+          this.state.customers = dbCustomers;
+          this._setStorage('trama_customers', JSON.stringify(dbCustomers));
+        }
+      }
+
+      this.notifyUpdate('dbSync');
+    } catch (e) {
+      // Servidor local offline ou aberto diretamente via arquivo local (file://)
+    }
+  },
+
+  deleteCustomer: function(customerId) {
+    if (!this.state.customers) return false;
+    const index = this.state.customers.findIndex(c => c.id === customerId);
+    if (index > -1) {
+      this.state.customers.splice(index, 1);
+      this._setStorage('trama_customers', JSON.stringify(this.state.customers));
+      if (typeof fetch !== 'undefined') {
+        fetch(`${this.apiBaseUrl}/api/customers/${customerId}`, { method: 'DELETE' }).catch(() => {});
+      }
+      this.notifyUpdate('customers');
+      return true;
+    }
+    return false;
   },
 
   // --------------------------------------------------------------------------
@@ -372,6 +461,13 @@ const TramaStore = {
         ...productData
       };
       this.saveCatalog(true);
+      if (typeof fetch !== 'undefined') {
+        fetch(`${this.apiBaseUrl}/api/products`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(TramaData.products[existingIndex])
+        }).catch(() => {});
+      }
       return { action: 'updated', product: TramaData.products[existingIndex] };
     } else {
       // Adicionar nova peça
@@ -406,6 +502,13 @@ const TramaStore = {
 
       TramaData.products.unshift(newProduct);
       this.saveCatalog(true);
+      if (typeof fetch !== 'undefined') {
+        fetch(`${this.apiBaseUrl}/api/products`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newProduct)
+        }).catch(() => {});
+      }
       return { action: 'created', product: newProduct };
     }
   },
@@ -415,6 +518,9 @@ const TramaStore = {
     if (index > -1) {
       const removed = TramaData.products.splice(index, 1)[0];
       this.saveCatalog(true);
+      if (typeof fetch !== 'undefined') {
+        fetch(`${this.apiBaseUrl}/api/products/${productId}`, { method: 'DELETE' }).catch(() => {});
+      }
       return removed;
     }
     return null;
@@ -449,6 +555,13 @@ const TramaStore = {
         ...lookData
       };
       this.saveLookbook(true);
+      if (typeof fetch !== 'undefined') {
+        fetch(`${this.apiBaseUrl}/api/lookbook`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(TramaData.lookbook[existingIndex])
+        }).catch(() => {});
+      }
       return { action: 'updated', look: TramaData.lookbook[existingIndex] };
     } else {
       const newLook = {
@@ -460,6 +573,13 @@ const TramaStore = {
       };
       TramaData.lookbook.push(newLook);
       this.saveLookbook(true);
+      if (typeof fetch !== 'undefined') {
+        fetch(`${this.apiBaseUrl}/api/lookbook`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newLook)
+        }).catch(() => {});
+      }
       return { action: 'created', look: newLook };
     }
   },
@@ -470,6 +590,9 @@ const TramaStore = {
     if (index > -1) {
       const removed = TramaData.lookbook.splice(index, 1)[0];
       this.saveLookbook(true);
+      if (typeof fetch !== 'undefined') {
+        fetch(`${this.apiBaseUrl}/api/lookbook/${lookId}`, { method: 'DELETE' }).catch(() => {});
+      }
       return removed;
     }
     return null;
