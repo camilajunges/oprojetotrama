@@ -54,34 +54,88 @@ const TramaStore = {
     }
   },
 
+  // Helpers de SessionStorage (sessão efêmera que encerra ao fechar a aba/navegador)
+  _getSessionStorage: function(key) {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        return sessionStorage.getItem(key);
+      }
+    } catch (e) {
+      console.warn("SessionStorage read error:", e);
+    }
+    return null;
+  },
+
+  _setSessionStorage: function(key, val) {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(key, val);
+      }
+    } catch (e) {
+      console.warn("SessionStorage write error:", e);
+    }
+  },
+
+  _removeSessionStorage: function(key) {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(key);
+      }
+    } catch (e) {
+      console.warn("SessionStorage remove error:", e);
+    }
+  },
+
   // Inicializar a partir de LocalStorage
   init: function() {
     try {
-      // 1. Carregar Sessão do Usuário
+      // REGRA ESTRITA: O site NUNCA armazena login no localStorage se for admin!
+      // Limpar proativamente quaisquer resquícios legados de admin do localStorage
+      this._removeStorage('trama_is_admin');
+      this._removeStorage('trama_admin_direct_edit');
+
+      const adminCreds = this.getAdminAccount();
+      const adminEmail = (adminCreds.email || 'oprojetotrama@gmail.com').toLowerCase();
+
+      // 1. Carregar Sessão do Usuário Comum
       const savedUser = this._getStorage('trama_user');
       if (savedUser) {
-        try { this.state.user = JSON.parse(savedUser); } catch (e) { this.state.user = null; }
+        try {
+          const parsed = JSON.parse(savedUser);
+          // Se for usuário admin gravado no localStorage anteriormente, remove imediatamente!
+          if (parsed && (parsed.role === 'admin' || (parsed.email && parsed.email.toLowerCase() === adminEmail))) {
+            this._removeStorage('trama_user');
+            this.state.user = null;
+          } else {
+            this.state.user = parsed;
+          }
+        } catch (e) {
+          this.state.user = null;
+        }
       } else {
         this.state.user = null;
       }
 
-      // 2. Verificar se a Dona (Admin) está autenticada
-      // Apenas é admin se o usuário logado for exatamente o e-mail de admin (oprojetotrama@gmail.com)
-      const savedAdminAuth = this._getStorage('trama_is_admin');
-      const adminCreds = this.getAdminAccount();
-      if (savedAdminAuth === 'true' && this.state.user && this.state.user.email && 
-          this.state.user.email.toLowerCase() === adminCreds.email.toLowerCase()) {
-        this.state.isAdmin = true;
-      } else {
-        this.state.isAdmin = false;
-        this._removeStorage('trama_is_admin');
-      }
+      // 2. Estado de Admin: NUNCA carregado do localStorage!
+      // Somente verificado na sessão efêmera da aba ativa (sessionStorage)
+      this.state.isAdmin = false;
+      this.state.adminDirectEdit = false;
 
-      const savedDirectEdit = this._getStorage('trama_admin_direct_edit');
-      if (savedDirectEdit === 'true' && this.state.isAdmin) {
-        this.state.adminDirectEdit = true;
-      } else {
-        this.state.adminDirectEdit = false;
+      const sessionAdmin = this._getSessionStorage('trama_admin_session');
+      if (sessionAdmin) {
+        try {
+          const parsedAdmin = JSON.parse(sessionAdmin);
+          if (parsedAdmin && parsedAdmin.isLoggedIn && parsedAdmin.email && 
+              parsedAdmin.email.toLowerCase() === adminEmail) {
+            this.state.user = parsedAdmin;
+            this.state.isAdmin = true;
+            const sessionDirectEdit = this._getSessionStorage('trama_admin_direct_edit');
+            this.state.adminDirectEdit = sessionDirectEdit === 'true';
+          }
+        } catch (e) {
+          this.state.isAdmin = false;
+          this.state.adminDirectEdit = false;
+        }
       }
 
       // 3. Carregar Catálogo Salvo
@@ -317,7 +371,10 @@ const TramaStore = {
   },
 
   isAdminLoggedIn: function() {
-    return this.state.isAdmin === true;
+    if (!this.state.isAdmin) return false;
+    if (!this.state.user || !this.state.user.isLoggedIn || !this.state.user.email) return false;
+    const adminEmail = (this.getAdminAccount().email || 'oprojetotrama@gmail.com').toLowerCase();
+    return this.state.user.email.toLowerCase() === adminEmail;
   },
 
   adminLogin: function(emailOrUser, password) {
@@ -342,7 +399,6 @@ const TramaStore = {
 
     if (isUserValid && isPassValid) {
       this.state.isAdmin = true;
-      this._setStorage('trama_is_admin', 'true');
       this.state.user = {
         isLoggedIn: true,
         name: creds.name || "Camila Guimarães (Proprietária)",
@@ -351,7 +407,14 @@ const TramaStore = {
         phone: "(41) 99258-4033",
         savedMeasurements: { busto: 90, cintura: 70, quadril: 98, altura: 165 }
       };
-      this.saveUser();
+
+      // REGRA ESTRITA: O site NUNCA armazena login no localStorage se for admin!
+      this._removeStorage('trama_is_admin');
+      this._removeStorage('trama_admin_direct_edit');
+      this._removeStorage('trama_user');
+
+      // Salva apenas na sessão da aba atual (sessionStorage)
+      this._setSessionStorage('trama_admin_session', JSON.stringify(this.state.user));
       this.notifyUpdate('adminAuth');
       return true;
     }
@@ -363,12 +426,22 @@ const TramaStore = {
     this.state.adminDirectEdit = false;
     this._removeStorage('trama_is_admin');
     this._removeStorage('trama_admin_direct_edit');
+    this._removeSessionStorage('trama_admin_session');
+    this._removeSessionStorage('trama_admin_direct_edit');
+    if (this.state.user && (this.state.user.role === 'admin' || (this.state.user.email && this.state.user.email.toLowerCase() === 'oprojetotrama@gmail.com'))) {
+      this.state.user = null;
+      this._removeStorage('trama_user');
+    }
     this.notifyUpdate('adminAuth');
   },
 
   toggleAdminDirectEdit: function() {
+    if (!this.isAdminLoggedIn()) {
+      this.state.adminDirectEdit = false;
+      return false;
+    }
     this.state.adminDirectEdit = !this.state.adminDirectEdit;
-    this._setStorage('trama_admin_direct_edit', this.state.adminDirectEdit ? 'true' : 'false');
+    this._setSessionStorage('trama_admin_direct_edit', this.state.adminDirectEdit ? 'true' : 'false');
     this.notifyUpdate('adminAuth');
     return this.state.adminDirectEdit;
   },
@@ -642,7 +715,25 @@ const TramaStore = {
   },
 
   saveUser: function() {
-    this._setStorage('trama_user', JSON.stringify(this.state.user));
+    const adminEmail = (this.getAdminAccount().email || 'oprojetotrama@gmail.com').toLowerCase();
+    const isUserAdmin = this.state.user && (
+      this.state.user.role === 'admin' ||
+      (this.state.user.email && this.state.user.email.toLowerCase() === adminEmail)
+    );
+
+    if (isUserAdmin) {
+      // REGRA ESTRITA: O site NUNCA armazena login no localStorage se for admin
+      this._removeStorage('trama_user');
+      this._removeStorage('trama_is_admin');
+      this._setSessionStorage('trama_admin_session', JSON.stringify(this.state.user));
+    } else {
+      this._removeSessionStorage('trama_admin_session');
+      if (this.state.user) {
+        this._setStorage('trama_user', JSON.stringify(this.state.user));
+      } else {
+        this._removeStorage('trama_user');
+      }
+    }
     this.notifyUpdate('user');
   },
 
@@ -807,6 +898,27 @@ const TramaStore = {
     }
     this.state.user.savedMeasurements = { ...measurements };
     this.saveUser();
+
+    // Sincronizar também no banco de clientes
+    if (this.state.customers && this.state.user.email) {
+      const c = this.state.customers.find(item => item.email.toLowerCase() === this.state.user.email.toLowerCase());
+      if (c) {
+        c.busto = measurements.busto || c.busto;
+        c.cintura = measurements.cintura || c.cintura;
+        c.quadril = measurements.quadril || c.quadril;
+        c.altura = measurements.altura || c.altura;
+        this._setStorage('trama_customers', JSON.stringify(this.state.customers));
+      }
+    }
+
+    if (typeof fetch !== 'undefined' && this.state.user) {
+      fetch(`${this.apiBaseUrl}/api/auth/measurements`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: this.state.user.id || 'usr_current', ...measurements })
+      }).catch(() => {});
+    }
+
     if (typeof TramaApp !== 'undefined') TramaApp.showToast("Medidas salvas na sua conta com segurança.");
   },
 

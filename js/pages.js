@@ -1438,10 +1438,14 @@ const TramaPages = {
         </div>
 
         <!-- Indicadores de Gestão Rápida -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px;">
           <div style="padding: 18px; background: var(--card-bg); border: 1px solid var(--slopes);">
             <div class="caps-label text-muted">Peças no Catálogo</div>
             <div style="font-size: 26px; font-weight: 700; color: var(--midnight); margin-top: 4px;">${products.length}</div>
+          </div>
+          <div style="padding: 18px; background: var(--card-bg); border: 1px solid var(--slopes);">
+            <div class="caps-label text-muted">Clientes no Banco</div>
+            <div style="font-size: 26px; font-weight: 700; color: var(--midnight); margin-top: 4px;">${(TramaStore.state.customers || []).length}</div>
           </div>
           <div style="padding: 18px; background: var(--card-bg); border: 1px solid var(--slopes);">
             <div class="caps-label text-muted">Pedidos na Fila</div>
@@ -1452,7 +1456,7 @@ const TramaPages = {
             <div style="font-size: 26px; font-weight: 700; color: var(--vinho-500); margin-top: 4px;">R$ ${totalRevenue.toFixed(2)}</div>
           </div>
           <div style="padding: 18px; background: var(--card-bg); border: 1px solid var(--slopes);">
-            <div class="caps-label text-muted">Vagas Restantes na Semana</div>
+            <div class="caps-label text-muted">Vagas Restantes</div>
             <div style="font-size: 26px; font-weight: 700; color: var(--midnight); margin-top: 4px;">${capacity.total - capacity.booked}</div>
           </div>
         </div>
@@ -1461,6 +1465,9 @@ const TramaPages = {
         <div class="tab-nav" style="margin-bottom: 24px;">
           <button class="tab-nav-btn ${adminTab === 'produtos' ? 'active' : ''}" onclick="TramaApp.switchAdminTab('produtos')">
             🛍️ Peças & Imagens (${products.length})
+          </button>
+          <button class="tab-nav-btn ${adminTab === 'clientes' ? 'active' : ''}" onclick="TramaApp.switchAdminTab('clientes')">
+            👥 Clientes & Medidas (${(TramaStore.state.customers || []).length})
           </button>
           <button class="tab-nav-btn ${adminTab === 'lookbook' ? 'active' : ''}" onclick="TramaApp.switchAdminTab('lookbook')">
             📸 Lookbook (${(TramaData.lookbook || []).length})
@@ -1519,6 +1526,84 @@ const TramaPages = {
                 `;
               }).join('')}
             </div>
+          </div>
+        </div>
+
+        <!-- ABA 1.2: GESTÃO DE CLIENTES E MEDIDAS NO BANCO DE DADOS -->
+        <div id="admin-tab-clientes" style="${adminTab === 'clientes' ? '' : 'display: none;'}">
+          <div style="background: var(--card-bg); border: 1px solid var(--midnight); padding: 24px;">
+            <div class="flex-between flex-wrap gap-sm" style="margin-bottom: 20px;">
+              <div>
+                <h2 class="caps-label" style="font-size: 14px;">Banco de Dados de Clientes & Medidas Corporais</h2>
+                <p style="font-size: 13px; color: var(--apres-ski);">Consulte clientes cadastradas no banco relacional, histórico de pedidos e suas medidas anatômicas para corte sob medida.</p>
+              </div>
+              <div>
+                <span class="badge badge-sob-encomenda" style="background: var(--card-bg-subtle);">🗄️ Tabela users + customer_measurements</span>
+              </div>
+            </div>
+
+            ${(TramaStore.state.customers && TramaStore.state.customers.length > 0) ? `
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                ${TramaStore.state.customers.map(c => `
+                  <div style="border: 1px solid var(--slopes); background: var(--bg); padding: 20px;">
+                    <div class="flex-between flex-wrap gap-sm" style="border-bottom: 1px solid var(--slopes); padding-bottom: 12px; margin-bottom: 14px;">
+                      <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span style="font-size: 16px; font-weight: 700; color: var(--midnight);">${c.name}</span>
+                          <span class="badge badge-sob-encomenda" style="font-size: 10px;">ID: ${c.id}</span>
+                        </div>
+                        <div style="font-size: 13px; color: var(--apres-ski); margin-top: 2px;">
+                          ✉️ ${c.email} • 📞 ${c.phone || 'Não informado'} • Registrada em ${c.created_at ? new Date(c.created_at).toLocaleDateString('pt-BR') : 'Hoje'}
+                        </div>
+                      </div>
+                      <div style="display: flex; gap: 8px; align-items: center;">
+                        <span class="badge" style="background: var(--card-bg-subtle); border: 1px solid var(--slopes); font-size: 11px;">
+                          📦 ${c.total_orders || 0} pedido(s)
+                        </span>
+                        <button class="btn btn-secondary btn-sm" style="color: var(--vinho-500); border-color: var(--vinho-500);" onclick="TramaApp.deleteCustomerPrompt('${c.id}', '${c.name}')" title="Excluir cliente do banco">
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Ficha de Medidas Anatômicas da Cliente -->
+                    <div style="background: var(--card-bg-subtle); border: 1px solid var(--slopes); padding: 14px 18px;">
+                      <span class="caps-label" style="font-size: 11px; color: var(--vinho-500); display: block; margin-bottom: 8px;">
+                        📐 Medidas para Alfaiataria Anatômica:
+                      </span>
+                      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
+                        <div style="background: var(--bg); padding: 8px 12px; border: 1px solid var(--slopes);">
+                          <div style="font-size: 11px; color: var(--apres-ski); text-transform: uppercase;">Busto</div>
+                          <div style="font-size: 16px; font-weight: 700; color: var(--midnight);">${c.busto ? c.busto + ' cm' : 'Não informada'}</div>
+                        </div>
+                        <div style="background: var(--bg); padding: 8px 12px; border: 1px solid var(--slopes);">
+                          <div style="font-size: 11px; color: var(--apres-ski); text-transform: uppercase;">Cintura</div>
+                          <div style="font-size: 16px; font-weight: 700; color: var(--midnight);">${c.cintura ? c.cintura + ' cm' : 'Não informada'}</div>
+                        </div>
+                        <div style="background: var(--bg); padding: 8px 12px; border: 1px solid var(--slopes);">
+                          <div style="font-size: 11px; color: var(--apres-ski); text-transform: uppercase;">Quadril</div>
+                          <div style="font-size: 16px; font-weight: 700; color: var(--midnight);">${c.quadril ? c.quadril + ' cm' : 'Não informada'}</div>
+                        </div>
+                        <div style="background: var(--bg); padding: 8px 12px; border: 1px solid var(--slopes);">
+                          <div style="font-size: 11px; color: var(--apres-ski); text-transform: uppercase;">Altura</div>
+                          <div style="font-size: 16px; font-weight: 700; color: var(--midnight);">${c.altura ? c.altura + ' cm' : 'Não informada'}</div>
+                        </div>
+                      </div>
+                      ${c.observacoes ? `
+                        <div style="font-size: 12px; color: var(--apres-ski); margin-top: 8px; font-style: italic;">
+                          Obs: "${c.observacoes}"
+                        </div>
+                      ` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : `
+              <div style="padding: 40px; text-align: center; background: var(--bg); border: 1px dashed var(--slopes);">
+                <p style="color: var(--apres-ski); font-size: 14px;">Nenhuma cliente cadastrada no banco de dados ainda.</p>
+                <p style="color: var(--apres-ski); font-size: 12px; margin-top: 6px;">Novas clientes cadastradas aparecerão automaticamente aqui com suas medidas corporais.</p>
+              </div>
+            `}
           </div>
         </div>
 

@@ -74,6 +74,7 @@ const TramaApp = {
     });
 
     this.closeMobileMenu();
+    this.updateAdminHeaderBadge();
 
     const [path, query] = hash.split('?');
     const params = new URLSearchParams(query || '');
@@ -636,6 +637,15 @@ const TramaApp = {
       } else {
         this.refreshCurrentRoute();
       }
+    }
+  },
+
+  deleteCustomerPrompt: function(customerId, customerName) {
+    if (!TramaStore.isAdminLoggedIn()) return;
+    if (confirm(`Deseja excluir a cliente "${customerName}" do banco de dados? Todas as medidas corporais vinculadas serão removidas.`)) {
+      TramaStore.deleteCustomer(customerId);
+      this.showToast(`Cliente "${customerName}" removida do banco de dados.`);
+      this.refreshCurrentRoute();
     }
   },
 
@@ -1346,8 +1356,10 @@ const TramaApp = {
     // 2. SE FOR UMA CLIENTE COMUM (Qualquer outro e-mail)
     TramaStore.adminLogout();
     const clientName = name || (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1));
+    const newUserId = `usr_${Date.now()}`;
 
     TramaStore.state.user = {
+      id: newUserId,
       isLoggedIn: true,
       name: clientName,
       email: email,
@@ -1356,6 +1368,39 @@ const TramaApp = {
       savedMeasurements: { busto: 90, cintura: 70, quadril: 98, altura: 165 }
     };
     TramaStore.saveUser();
+
+    // Adiciona / atualiza no banco de dados de clientes
+    if (!TramaStore.state.customers) TramaStore.state.customers = [];
+    const existingCustIdx = TramaStore.state.customers.findIndex(c => c.email.toLowerCase() === email.toLowerCase());
+    const customerRecord = {
+      id: newUserId,
+      name: clientName,
+      email: email,
+      phone: "(41) 99258-4033",
+      role: 'client',
+      created_at: new Date().toISOString(),
+      busto: 90,
+      cintura: 70,
+      quadril: 98,
+      altura: 165,
+      total_orders: 0
+    };
+    if (existingCustIdx > -1) {
+      TramaStore.state.customers[existingCustIdx] = { ...TramaStore.state.customers[existingCustIdx], ...customerRecord };
+    } else {
+      TramaStore.state.customers.unshift(customerRecord);
+    }
+    TramaStore._setStorage('trama_customers', JSON.stringify(TramaStore.state.customers));
+
+    // Sincronizar com o banco de dados backend se disponível
+    if (typeof fetch !== 'undefined') {
+      fetch(`${TramaStore.apiBaseUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass, name: clientName, phone: "(41) 99258-4033", measurements: customerRecord })
+      }).catch(() => {});
+    }
+
     this.updateAdminHeaderBadge();
     this.showToast(`Bem-vinda à Trama, ${clientName}!`);
     window.location.hash = '#/conta';

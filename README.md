@@ -119,14 +119,42 @@ O projeto inclui todas as **16 páginas e fluxos** solicitados na diretiva:
 
 ---
 
+## 🗄️ Banco de Dados Relacional (SQLite) & API REST
+
+A aplicação conta com um **Banco de Dados Relacional SQLite** completo (`data/trama.db`) e uma API REST em Node.js (sem dependências externas pesadas), armazenando com segurança dados estruturados de **produtos**, **clientes**, **medidas anatômicas**, **pedidos** e **campanhas de lookbook**.
+
+### Tabelas do Banco de Dados (`data/schema.sql`):
+1. **`users`**: Armazena clientes cadastradas e a conta da proprietária (`oprojetotrama@gmail.com`), com hash seguro de senha, data de cadastro e tipo de usuário (`client` ou `admin`).
+2. **`customer_measurements`**: Armazena as medidas corporais das clientes para confecção sob medida (**busto, cintura, quadril, altura e observações de caimento**), vinculadas ao ID de cada cliente por chave estrangeira.
+3. **`customer_addresses`**: Endereços de entrega das clientes com CEP, logradouro, número, bairro, cidade e estado.
+4. **`products`**: Catálogo completo de peças sob encomenda com nome, categoria, estética (fluido/reto/encontro), preço, prazo de ateliê, descrições, opções de tecidos, cores e fotos em JSON.
+5. **`lookbook`**: Ensaios fotográficos conceituais, fotos e lista de peças vinculadas para a funcionalidade "Compre o Look".
+6. **`orders`**: Pedidos sob encomenda com status da linha do tempo da costura, medidas anatômicas personalizadas e forma de pagamento.
+
+### Como Iniciar o Servidor & Banco de Dados:
+No terminal da pasta do projeto:
+```bash
+npm start
+# ou: node server.js
+```
+Acesse em: **`http://localhost:3000`**
+
+*Nota: Se o site for aberto diretamente via duplo-clique no arquivo `index.html` (sem servidor), o frontend continua funcionando perfeitamente utilizando persistência local com sincronização automática.*
+
+---
+
 ## 🚀 Como Executar Localmente
 
-### Opção 1: Abrir diretamente no navegador
-Dê um duplo clique no arquivo `index.html`.
-
-### Opção 2: Servidor local com Python
-No terminal da pasta do projeto (`C:\Users\Camila\.gemini\antigravity\scratch\projeto-trama`):
+### Opção 1: Servidor Node.js com Banco de Dados SQLite (Recomendado)
 ```bash
-python -m http.server 3000
+npm start
 ```
-E abra no navegador em `http://localhost:3000`.
+Acesse em: `http://localhost:3000`
+
+### Opção 2: Testar Banco de Dados no Terminal
+```bash
+npm run test:db
+```
+
+### Opção 3: Abrir diretamente no navegador (Modo Offline / LocalStorage)
+Dê um duplo clique no arquivo `index.html`.

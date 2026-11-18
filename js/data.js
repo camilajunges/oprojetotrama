@@ -180,11 +180,7 @@ const TramaData = {
     },
     {
       q: "Qual é o prazo total entre o pedido e a chegada na minha casa?",
-      a: "O prazo total é composto por: Prazo de Confecção no Ateliê (15 a 20 dias úteis) + Prazo de Transporte dos Correios/Transportadora (geralmente 2 a 5 dias úteis, conforme seu CEP). No carrinho você sempre vê a soma exata e transparente."
-    },
-    {
-      q: "Posso trocar ou devolver uma peça feita sob medida?",
-      a: "Sim! Respeitamos rigorosamente o Direito de Arrependimento de 7 dias previsto pelo Código de Defesa do Consumidor. Além disso, se a peça sob medida necessitar de um ajuste fino de caimento, oferecemos o primeiro ajuste gratuitamente em nosso ateliê com logística reversa custeada por nós."
+      a: "O prazo total é composto por: Prazo de Confecção no Ateliê (20 a 30 dias úteis) + Prazo de Transporte dos Correios/Transportadora (geralmente 2 a 5 dias úteis, conforme seu CEP). No carrinho você sempre vê a soma exata e transparente."
     },
     {
       q: "Por que vocês limitam a 25 pedidos por semana?",
@@ -231,10 +227,6 @@ const TramaData = {
 // Exportar para escopo global com total compatibilidade
 if (typeof window !== 'undefined') {
   window.TramaData = TramaData;
-}
-if (typeof globalThis !== 'undefined') {
+} else if (typeof globalThis !== 'undefined') {
   globalThis.TramaData = TramaData;
-}
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = TramaData;
 }
