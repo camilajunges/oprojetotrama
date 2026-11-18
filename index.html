@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Projeto Trama — Moda minimalista sob encomenda (slow fashion). A dualidade entre o fluido e o reto. Peças sem estoque parado com corte milimétrico e tecidos nobres." />
+  <meta name="theme-color" content="#090F15" />
+  
+  <!-- Open Graph / Meta Compartilhamento (1200 x 630) -->
+  <meta property="og:title" content="Projeto Trama — Moda Sob Encomenda | Fluido × Reto" />
+  <meta property="og:description" content="Peças feitas sob encomenda com zero desperdício têxtil. O equilíbrio entre o caimento fluido e a estrutura da alfaiataria reta." />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&h=630&q=80" />
+  <meta property="og:type" content="website" />
+
+  <title>Projeto Trama — Moda Sob Encomenda • Fluido × Reto</title>
+
+  <!-- Favicon com a Estrela Vinho (#4D0C0C) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpolygon points='32,4 37,22 56,22 40,34 46,52 32,40 18,52 24,34 8,22 27,22' fill='%234D0C0C'/%3E%3C/svg%3E" />
+
+  <!-- Estilos do Design System, Componentes e Animações -->
+  <link rel="stylesheet" href="css/design-system.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+
+  <style>
+    /* Estilos específicos para o menu mobile e modais adicionais */
+    @media (max-width: 900px) {
+      .header-nav {
+        display: none;
+        position: fixed;
+        top: 64px;
+        left: 0;
+        width: 100%;
+        height: calc(100vh - 64px);
+        background: var(--bg);
+        flex-direction: column;
+        padding: 40px 24px;
+        gap: 20px;
+        z-index: 99;
+        overflow-y: auto;
+      }
+      .header-nav.mobile-open {
+        display: flex;
+      }
+      .mobile-menu-btn {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Barra de Aviso Superior (Dispensável - Diretiva) -->
+  <div class="announcement-bar" id="top-announcement">
+    <div class="announcement-text">
+      Frete grátis para todo o Brasil acima de R$ 600 • Peças feitas sob encomenda com zero desperdício
+    </div>
+    <button class="announcement-close" onclick="document.getElementById('top-announcement').classList.add('hidden')" aria-label="Fechar aviso">✕</button>
+  </div>
+
+  <!-- 2. Header Fixo (64px) com Comportamento de Rolagem Dinâmica -->
+  <header class="site-header" role="banner">
+    <div class="header-container">
+      
+      <!-- Lado Esquerdo: Menu Principal e Menu Mobile -->
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <button class="mobile-menu-btn" onclick="TramaApp.toggleMobileMenu()" aria-label="Abrir Menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+        </button>
+
+        <nav class="header-nav" id="header-nav-list" role="navigation">
+          <a href="#/sob-encomenda" class="nav-link link-underlined">Sob Encomenda</a>
+          <a href="#/sob-encomenda?estetica=todos" class="nav-link link-underlined">Novidades</a>
+          <a href="#/sob-encomenda?estetica=fluido" class="nav-link link-underlined">Fluido / Reto</a>
+          <a href="#/lookbook" class="nav-link link-underlined">Lookbook</a>
+          <a href="#/sobre" class="nav-link link-underlined">A Trama</a>
+        </nav>
+      </div>
+
+      <!-- Centro: Logo com Coelho e Estrela Vinho (#4D0C0C) -->
+      <a href="#/" class="header-logo" aria-label="Projeto Trama - Página Inicial">
+        <span id="header-rabbit-logo" style="display: flex; align-items: center;">
+          <!-- SVG inserido via JS para máxima precisão -->
+        </span>
+        <span class="logo-text">PROJETO TRAMA</span>
+      </a>
+
+      <!-- Lado Direito: Busca, Conta, Favoritos, Sacola e Modo Ateliê -->
+      <div class="header-actions">
+        <!-- Botão Busca Instantânea -->
+        <button class="action-btn" onclick="TramaApp.openSearchModal()" aria-label="Buscar no site" title="Buscar peças">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        </button>
+
+        <!-- Botão Minha Conta -->
+        <a href="#/conta" class="action-btn" aria-label="Minha Conta" title="Área da cliente e medidas salvas">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M4 21C4 17.5 7.5 15 12 15C16.5 15 20 17.5 20 21"/></svg>
+        </a>
+
+        <!-- Botão Favoritos -->
+        <a href="#/conta" onclick="setTimeout(() => TramaApp.switchAccountTab('favoritos'), 50)" class="action-btn" aria-label="Favoritos" title="Peças salvas">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20.5L3.8 12.3C1.4 9.9 1.4 6 3.8 3.6C6.2 1.2 10.1 1.2 12.5 3.6L12 4.1L11.5 3.6C13.9 1.2 17.8 1.2 20.2 3.6C22.6 6 22.6 9.9 20.2 12.3L12 20.5Z"/></svg>
+          <span class="action-badge" id="header-wish-count" style="display: none;">0</span>
+        </a>
+
+        <!-- Botão Sacola Lateral (Drawer) -->
+        <button class="action-btn" onclick="TramaApp.openCartDrawer()" aria-label="Abrir Sacola de Compras" title="Sacola">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 8H19L20 21H4L5 8Z"/><path d="M8 8V5C8 3.89543 8.89543 3 10 3H14C15.1046 3 16 3.89543 16 5V8"/></svg>
+          <span class="action-badge" id="header-bag-count" style="display: none;">0</span>
+        </button>
+
+        <!-- Atalho do Ateliê: Apenas exibido se a Proprietária estiver conectada -->
+        <span id="header-admin-badge" style="display: none;">
+          <a href="#/admin" class="btn btn-sm" style="font-size: 10px; padding: 0 10px; height: 32px; background: var(--vinho-500); color: #fff; border: none; display: inline-flex; align-items: center; gap: 4px;" title="Painel da Proprietária">
+            👑 Ateliê
+          </a>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 3. Contêiner Principal da Aplicação (SPA Router) -->
+  <main id="app-content" role="main" tabindex="-1">
+    <!-- Renderizado dinamicamente via TramaPages e TramaApp -->
+  </main>
+
+  <!-- 4. Sacola Lateral (Drawer 420px) com Animação do Coelho -->
+  <div class="drawer-backdrop" id="cart-drawer-backdrop" onclick="if(event.target === this) TramaApp.closeCartDrawer()">
+    <aside class="cart-drawer" role="dialog" aria-label="Sacola de Compras">
+      
+      <!-- Cabeçalho do Drawer -->
+      <div class="drawer-header">
+        <span class="drawer-title">Sua Sacola Sob Encomenda</span>
+        <button class="drawer-close" onclick="TramaApp.closeCartDrawer()" aria-label="Fechar Sacola">✕</button>
+      </div>
+
+      <!-- Barra de Progresso de Frete Grátis -->
+      <div class="shipping-meter">
+        <div id="drawer-shipping-text">Faltam R$ 600,00 para garantir Frete Grátis</div>
+        <div class="shipping-meter-bar">
+          <div class="shipping-meter-fill" id="drawer-shipping-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <!-- Microinteração do Coelho Batendo a Pata (Ativa ao adicionar peça) -->
+      <div id="drawer-paw-microinteraction" style="display: none;"></div>
+
+      <!-- Lista de Itens com Detalhes das Medidas -->
+      <div class="drawer-items" id="drawer-items-list">
+        <!-- Preenchido dinamicamente -->
+      </div>
+
+      <!-- Rodapé do Drawer com Totais e Botão de Finalização -->
+      <div class="drawer-footer" id="drawer-footer-content">
+        <div class="drawer-totals">
+          <div class="drawer-row">
+            <span>Confecção Artesanal</span>
+            <span style="color: var(--vinho-600); font-weight: 600;">15–20 dias úteis</span>
+          </div>
+          <div class="drawer-row total">
+            <span>Subtotal</span>
+            <span id="drawer-subtotal-val">R$ 0,00</span>
+          </div>
+        </div>
+
+        <a href="#/checkout" class="btn btn-primary btn-block" onclick="TramaApp.closeCartDrawer()" style="height: 50px;">
+          Finalizar Encomenda (Checkout)
+        </a>
+      </div>
+    </aside>
+  </div>
+
+  <!-- 5. Modal do Guia de Medidas Passo a Passo -->
+  <div class="modal-overlay" id="measurement-modal" onclick="if(event.target === this) TramaApp.closeMeasurementModal()">
+    <div class="modal-box" role="dialog" aria-label="Guia de Medidas">
+      <button class="modal-close-btn" onclick="TramaApp.closeMeasurementModal()" aria-label="Fechar Guia">✕</button>
+      <span class="caps-label text-muted">Ajuste sob medida</span>
+      <h2 class="serif-italic" style="font-size: 28px; margin: 6px 0 16px 0;">Como Tirar Suas Medidas</h2>
+      <p style="font-size: 14px; color: var(--mountainside); margin-bottom: 24px;">
+        Use uma fita métrica confortável. Mantenha a fita paralela ao chão, sem apertar nem folgar em excesso.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="border-bottom: 1px solid var(--slopes); padding-bottom: 12px;">
+          <strong>1. Busto / Tórax (70 a 140 cm):</strong> Meça na parte mais alta do busto, respirando tranquilamente.
+        </div>
+        <div style="border-bottom: 1px solid var(--slopes); padding-bottom: 12px;">
+          <strong>2. Cintura Natural (50 a 120 cm):</strong> Meça no ponto mais estreito do tronco, geralmente 2 dedos acima do umbigo.
+        </div>
+        <div style="border-bottom: 1px solid var(--slopes); padding-bottom: 12px;">
+          <strong>3. Quadril (70 a 150 cm):</strong> Com os pés juntos, passe a fita na porção mais larga dos quadris.
+        </div>
+        <div>
+          <strong>4. Altura (140 a 200 cm):</strong> Sua estatura descalça, da cabeça aos pés.
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" style="margin-top: 28px;" onclick="TramaApp.closeMeasurementModal()">
+        Entendido, Voltar à Configuração
+      </button>
+    </div>
+  </div>
+
+  <!-- 6. Modal de Busca Instantânea com Sugestões por Cor e Tecido -->
+  <div class="modal-overlay" id="search-modal" onclick="if(event.target === this) TramaApp.closeSearchModal()">
+    <div class="modal-box" role="dialog" aria-label="Busca de Peças" style="max-width: 600px;">
+      <button class="modal-close-btn" onclick="TramaApp.closeSearchModal()" aria-label="Fechar Busca">✕</button>
+      <span class="caps-label text-muted">Busca no Catálogo Autoral</span>
+      <h2 class="serif-italic" style="font-size: 26px; margin: 6px 0 20px 0;">O que você gostaria de encomendar?</h2>
+
+      <div class="form-group">
+        <input type="text" id="modal-search-input" placeholder="Digite uma cor, tecido, categoria ou modelo..." class="form-input" oninput="TramaApp.handleSearchInput(this.value)" autocomplete="off" />
+      </div>
+
+      <!-- Resultados Dinâmicos da Busca -->
+      <div id="search-live-results"></div>
+    </div>
+  </div>
+
+  <!-- 6.1 Modal do CMS: Editor e Cadastro de Peças com Upload de Fotos -->
+  <div class="modal-overlay" id="product-editor-modal" onclick="if(event.target === this) TramaApp.closeProductEditor()">
+    <div class="modal-box" role="dialog" aria-label="Editor de Peça" style="max-width: 780px;">
+      <button class="modal-close-btn" onclick="TramaApp.closeProductEditor()" aria-label="Fechar">✕</button>
+      <span class="caps-label" style="color: var(--vinho-500); font-weight: 700;">Gerenciador de Peças • Modo Ateliê</span>
+      <h2 class="serif-italic" style="font-size: 28px; margin: 6px 0 16px 0;" id="editor-modal-title">Editar Peça & Fotos</h2>
+      
+      <form id="product-editor-form" onsubmit="event.preventDefault(); TramaApp.saveProductFromModal();">
+        <input type="hidden" id="edit-prod-id" />
+
+        <!-- SEÇÃO DE FOTOS E UPLOAD LOCAL DO COMPUTADOR -->
+        <div style="border: 1px solid var(--midnight); padding: 20px; background: var(--card-bg-subtle); margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span class="caps-label" style="font-weight: 700; color: var(--midnight);">📸 Fotografias da Peça</span>
+            <span style="font-size: 11px; color: var(--vinho-500); font-weight: 700; text-transform: uppercase;">1ª = Capa • 2ª = Hover</span>
+          </div>
+          <p style="font-size: 13px; color: var(--mountainside); margin-bottom: 14px;">
+            Suba imagens do seu dispositivo (JPG, PNG, WEBP). Elas são otimizadas e comprimidas automaticamente para manter a velocidade do site.
+          </p>
+
+          <!-- Grade de Pré-visualização das Imagens com Ordenação -->
+          <div id="editor-images-preview-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-bottom: 16px;"></div>
+
+          <!-- Área de Arrastar e Soltar (Drag & Drop) / Botão de Selecionar -->
+          <div id="editor-drop-zone" style="border: 2px dashed var(--slopes); padding: 18px; text-align: center; background: var(--bg); cursor: pointer; transition: all 0.2s ease; margin-bottom: 12px;" onclick="document.getElementById('edit-file-input').click()" ondragover="event.preventDefault(); this.style.borderColor='var(--vinho-500)'; this.style.background='var(--offwhite)';" ondragleave="this.style.borderColor='var(--slopes)'; this.style.background='var(--bg)';" ondrop="event.preventDefault(); this.style.borderColor='var(--slopes)'; this.style.background='var(--bg)'; TramaApp.handleImageFilesUpload(event.dataTransfer ? event.dataTransfer.files : event);">
+            <div style="font-size: 26px; margin-bottom: 4px;">📁</div>
+            <div style="font-size: 14px; font-weight: 600; color: var(--midnight);">Clique para escolher fotos do computador</div>
+            <div style="font-size: 12px; color: var(--apres-ski); margin-top: 2px;">ou arraste os arquivos de fotos diretamente para cá</div>
+            <input type="file" id="edit-file-input" accept="image/*" multiple style="display: none;" onchange="TramaApp.handleImageFilesUpload(event)" />
+          </div>
+
+          <!-- Opção de Link Web Alternativo -->
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="font-size: 12px; color: var(--apres-ski); white-space: nowrap;">Ou por link web:</span>
+            <input type="url" id="edit-image-url-input" placeholder="Cole uma URL direta da imagem (ex: https://...)" class="form-input" style="flex: 1; padding: 7px 10px; font-size: 12px; border: 1px solid var(--slopes); background: var(--bg);" />
+            <button type="button" class="btn btn-secondary btn-sm" onclick="TramaApp.addImageFromUrlInput()">+ Adicionar Link</button>
+          </div>
+        </div>
+
+        <!-- CAMPOS DO PRODUTO -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Nome da Peça</label>
+            <input type="text" id="edit-prod-name" required placeholder="Ex: Colete Estruturado em Alfaiataria" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preço Base (R$)</label>
+            <input type="text" id="edit-prod-price" required placeholder="Ex: 480 ou 480,00" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Subtítulo / Destaque de Caimento</label>
+          <input type="text" id="edit-prod-subtitle" placeholder="Ex: Design moderno com detalhes artesanais e caimento leve" class="form-input" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label">Categoria</label>
+            <select id="edit-prod-category" class="form-select" style="border-bottom: 1px solid var(--slopes);">
+              <option value="coletes">Coletes</option>
+              <option value="calcas">Calças</option>
+              <option value="vestidos">Vestidos</option>
+              <option value="blazers">Blazers / Alfaiataria</option>
+              <option value="camisas">Camisas & Blusas</option>
+              <option value="saias">Saias</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Estética Conceitual</label>
+            <select id="edit-prod-aesthetics" class="form-select" style="border-bottom: 1px solid var(--slopes);">
+              <option value="fluido">Fluido (Leveza & Caimento)</option>
+              <option value="reto">Reto (Estrutura & Impacto)</option>
+              <option value="encontro">O Encontro (Dualidade)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Prazo de Confecção</label>
+            <input type="text" id="edit-prod-leadtime" value="20–30 dias úteis" placeholder="Ex: 20–30 dias úteis" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Descrição Conceitual & Detalhes</label>
+          <textarea id="edit-prod-desc" rows="3" class="form-input" placeholder="Descreva a modelagem, o toque e a estrutura da peça..." style="resize: vertical;"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tecido Principal & Origem</label>
+          <input type="text" id="edit-prod-fabric" placeholder="Ex: Linho Puro 100% ou Alfaiataria com elastano" class="form-input" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cores Disponíveis (separadas por vírgula)</label>
+          <input type="text" id="edit-prod-colors" placeholder="Ex: Off-White Natural, Areia Lavada, Vinho Profundo, Midnight Negro" class="form-input" />
+        </div>
+
+        <!-- BOTÕES DO FORMULÁRIO -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 28px; border-top: 1px solid var(--slopes); padding-top: 20px;">
+          <button type="button" id="btn-delete-prod" class="btn btn-secondary btn-sm" style="color: var(--vinho-500); border-color: var(--vinho-500); display: none;" onclick="TramaApp.deleteCurrentProductFromModal()">
+            🗑️ Excluir Peça
+          </button>
+          <div style="display: flex; gap: 12px; margin-left: auto;">
+            <button type="button" class="btn btn-secondary" onclick="TramaApp.closeProductEditor()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Salvar no Catálogo</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6.2 Modal do CMS: Editor de Textos do Site -->
+  <div class="modal-overlay" id="site-content-editor-modal" onclick="if(event.target === this) TramaApp.closeContentEditor()">
+    <div class="modal-box" role="dialog" aria-label="Editor de Conteúdos da Loja" style="max-width: 680px;">
+      <button class="modal-close-btn" onclick="TramaApp.closeContentEditor()" aria-label="Fechar">✕</button>
+      <span class="caps-label" style="color: var(--vinho-500); font-weight: 700;">Editor Visual do Site</span>
+      <h2 class="serif-italic" style="font-size: 28px; margin: 6px 0 16px 0;">Alterar Textos da Loja</h2>
+      
+      <form onsubmit="event.preventDefault(); TramaApp.saveSiteContentFromModal();">
+        <div class="form-group">
+          <label class="form-label">Faixa de Aviso Superior (Barra fina)</label>
+          <input type="text" id="edit-site-announcement" class="form-input" />
+        </div>
+
+        <div style="border: 1px solid var(--slopes); padding: 16px; margin-bottom: 20px; background: var(--card-bg-subtle);">
+          <h3 class="caps-label" style="margin-bottom: 12px;">Hero: Lado Fluido (Esquerdo / Claro)</h3>
+          <div class="form-group">
+            <label class="form-label">Título</label>
+            <input type="text" id="edit-site-hero-fluid-title" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição</label>
+            <textarea id="edit-site-hero-fluid-desc" rows="2" class="form-input" style="resize: vertical;"></textarea>
+          </div>
+        </div>
+
+        <div style="border: 1px solid var(--slopes); padding: 16px; margin-bottom: 20px; background: var(--card-bg-subtle);">
+          <h3 class="caps-label" style="margin-bottom: 12px;">Hero: Lado Reto (Direito / Escuro)</h3>
+          <div class="form-group">
+            <label class="form-label">Título</label>
+            <input type="text" id="edit-site-hero-straight-title" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição</label>
+            <textarea id="edit-site-hero-straight-desc" rows="2" class="form-input" style="resize: vertical;"></textarea>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
+          <button type="button" class="btn btn-secondary" onclick="TramaApp.closeContentEditor()">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 7. Contêiner de Toasts (Notificações Flutuantes no Canto Inferior) -->
+  <div class="toast-container" id="toast-container" role="status" aria-live="polite"></div>
+
+  <!-- 8. Banner de Consentimento de Cookies LGPD (Diretiva 7.6) -->
+  <div class="cookie-banner" id="cookie-consent-banner" role="region" aria-label="Preferências de Privacidade">
+    <div class="cookie-text">
+      Utilizamos cookies essenciais para o funcionamento seguro da sacola e medidas personalizadas, em conformidade com a Lei Geral de Proteção de Dados (LGPD).
+    </div>
+    <div class="cookie-actions">
+      <button class="btn btn-sm btn-outline-light" onclick="TramaApp.setCookieConsent('recusar')">Apenas Essenciais</button>
+      <button class="btn btn-sm btn-primary" onclick="TramaApp.setCookieConsent('aceitar')">Aceitar Todos</button>
+    </div>
+  </div>
+
+  <!-- 9. Botão Flutuante de Atendimento WhatsApp Oficial -->
+  <a href="https://wa.me/5541992584033?text=Ol%C3%A1%2C%20gostaria%20de%20tirar%20uma%20d%C3%BAvida%20sobre%20as%20pe%C3%A7as%20sob%20encomenda%20do%20Projeto%20Trama" target="_blank" rel="noopener noreferrer" class="whatsapp-floating" aria-label="Falar no WhatsApp">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+    <span>Atendimento</span>
+  </a>
+
+  <!-- 10. Rodapé da Marca (Footer Midnight com 4 Colunas Conforme Diretiva) -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-grid">
+        
+        <!-- Coluna 1: Conceito e Símbolo -->
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+            <span id="footer-rabbit-logo"></span>
+            <span style="font-family: var(--font-straight); font-weight: 700; font-size: 16px; letter-spacing: 0.16em;">PROJETO TRAMA</span>
+          </div>
+          <p style="color: var(--arctic); font-size: 14px; line-height: 1.7; max-width: 340px;">
+            Moda sustentável sob encomenda. A dualidade viva entre a fluidez do tecido e a firmeza arquitetônica do corte reto.
+          </p>
+          <div style="margin-top: 20px; font-size: 13px; color: var(--slopes);">
+            Ateliê: Vila Madalena, São Paulo - SP
+          </div>
+        </div>
+
+        <!-- Coluna 2: Loja -->
+        <div>
+          <div class="footer-col-title">Loja</div>
+          <ul class="footer-links">
+            <li><a href="#/sob-encomenda" class="footer-link">Sob Encomenda</a></li>
+            <li><a href="#/sob-encomenda?estetica=fluido" class="footer-link">Linha Fluida</a></li>
+            <li><a href="#/sob-encomenda?estetica=reto" class="footer-link">Linha Reta</a></li>
+            <li><a href="#/sob-encomenda?estetica=encontro" class="footer-link">O Encontro</a></li>
+            <li><a href="#/lookbook" class="footer-link">Lookbook</a></li>
+          </ul>
+        </div>
+
+        <!-- Coluna 3: A Trama -->
+        <div>
+          <div class="footer-col-title">A Trama</div>
+          <ul class="footer-links">
+            <li><a href="#/sobre" class="footer-link">Sobre Nós</a></li>
+            <li><a href="#/sustentabilidade" class="footer-link">Sustentabilidade</a></li>
+            <li><a href="#/como-e-feita" class="footer-link">Como é Feita</a></li>
+            <li><a href="#/admin" class="footer-link" style="opacity: 0.5; font-size: 11px;">Acesso Ateliê</a></li>
+          </ul>
+        </div>
+
+        <!-- Coluna 4: Ajuda & Direitos -->
+        <div>
+          <div class="footer-col-title">Ajuda & Legal</div>
+          <ul class="footer-links">
+            <li><a href="#/guia-de-medidas" class="footer-link">Guia de Medidas</a></li>
+            <li><a href="#/trocas-e-envio" class="footer-link">Trocas & Prazos (CDC)</a></li>
+            <li><a href="#/faq" class="footer-link">Dúvidas Frequentes</a></li>
+            <li><a href="#/contato" class="footer-link">Contato & WhatsApp</a></li>
+            <li><a href="#/politicas" class="footer-link">Privacidade (LGPD)</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Linha Inferior com Obrigações Legais do E-Commerce no Brasil (Decreto 7.962/2013) -->
+      <div class="footer-bottom">
+        <div>
+          PROJETO TRAMA CONFECÇÕES ARTESANAIS LTDA • CNPJ 48.291.802/0001-94 • Rua Harmonia, 128 - Vila Madalena, São Paulo - SP
+        </div>
+        <div>
+          © 2026 Projeto Trama. Todos os direitos reservados.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts da Aplicação em Ordem de Dependência -->
+  <script src="js/rabbit-svg.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/pages.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Injeção dos Ícones e Inicialização -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Inserir símbolo oficial no Header e Footer
+      const headerLogo = document.getElementById('header-rabbit-logo');
+      if (headerLogo && window.RabbitSVGs) {
+        headerLogo.innerHTML = RabbitSVGs.symbol("#090F15", "#4D0C0C", 26);
+      }
+      const footerLogo = document.getElementById('footer-rabbit-logo');
+      if (footerLogo && window.RabbitSVGs) {
+        footerLogo.innerHTML = RabbitSVGs.symbol("#F2F0EC", "#4D0C0C", 28);
+      }
+
+      // Iniciar a aplicação
+      if (window.TramaApp) {
+        TramaApp.init();
+      }
+    });
+  </script>
+</body>
+</html>
