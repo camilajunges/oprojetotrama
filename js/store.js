@@ -56,17 +56,34 @@ const TramaStore = {
   // Inicializar a partir de LocalStorage
   init: function() {
     try {
-      // 1. Verificar se a Dona está autenticada
-      const savedAdminAuth = this._getStorage('trama_is_admin');
-      if (savedAdminAuth === 'true') {
-        this.state.isAdmin = true;
-      }
-      const savedDirectEdit = this._getStorage('trama_admin_direct_edit');
-      if (savedDirectEdit === 'true') {
-        this.state.adminDirectEdit = true;
+      // 1. Carregar Sessão do Usuário
+      const savedUser = this._getStorage('trama_user');
+      if (savedUser) {
+        try { this.state.user = JSON.parse(savedUser); } catch (e) { this.state.user = null; }
+      } else {
+        this.state.user = null;
       }
 
-      // 2. Carregar Catálogo Salvo
+      // 2. Verificar se a Dona (Admin) está autenticada
+      // Apenas é admin se o usuário logado for exatamente o e-mail de admin (oprojetotrama@gmail.com)
+      const savedAdminAuth = this._getStorage('trama_is_admin');
+      const adminCreds = this.getAdminAccount();
+      if (savedAdminAuth === 'true' && this.state.user && this.state.user.email && 
+          this.state.user.email.toLowerCase() === adminCreds.email.toLowerCase()) {
+        this.state.isAdmin = true;
+      } else {
+        this.state.isAdmin = false;
+        this._removeStorage('trama_is_admin');
+      }
+
+      const savedDirectEdit = this._getStorage('trama_admin_direct_edit');
+      if (savedDirectEdit === 'true' && this.state.isAdmin) {
+        this.state.adminDirectEdit = true;
+      } else {
+        this.state.adminDirectEdit = false;
+      }
+
+      // 3. Carregar Catálogo Salvo
       const savedCatalog = this._getStorage('trama_catalog');
       if (savedCatalog) {
         try {
@@ -139,39 +156,7 @@ const TramaStore = {
         try { this.state.wishlist = JSON.parse(savedWishlist); } catch (e) {}
       }
 
-      // 6. Carregar Usuário / Medidas da Cliente
-      const savedUser = this._getStorage('trama_user');
-      if (savedUser) {
-        try { this.state.user = JSON.parse(savedUser); } catch (e) {}
-      } else {
-        this.state.user = {
-          isLoggedIn: true,
-          name: "Camila Guimarães",
-          email: "camila@exemplo.com.br",
-          phone: "(41) 99258-4033",
-          savedMeasurements: {
-            busto: 92,
-            cintura: 72,
-            quadril: 101,
-            altura: 168
-          },
-          address: {
-            cep: "05435-000",
-            street: "Rua Harmonia",
-            number: "340",
-            complement: "Apto 42",
-            neighborhood: "Vila Madalena",
-            city: "São Paulo",
-            state: "SP"
-          },
-          preferences: {
-            emailNewsletter: true,
-            whatsappNotifications: true
-          }
-        };
-      }
-
-      // 7. Carregar Pedidos
+      // 6. Carregar Pedidos
       const savedOrders = this._getStorage('trama_orders');
       if (savedOrders) {
         try { this.state.orders = JSON.parse(savedOrders); } catch (e) {}
@@ -269,6 +254,15 @@ const TramaStore = {
     if (isUserValid && isPassValid) {
       this.state.isAdmin = true;
       this._setStorage('trama_is_admin', 'true');
+      this.state.user = {
+        isLoggedIn: true,
+        name: creds.name || "Camila Guimarães (Proprietária)",
+        email: creds.email,
+        role: "admin",
+        phone: "(41) 99258-4033",
+        savedMeasurements: { busto: 90, cintura: 70, quadril: 98, altura: 165 }
+      };
+      this.saveUser();
       this.notifyUpdate('adminAuth');
       return true;
     }

@@ -1269,44 +1269,97 @@ const TramaApp = {
   },
 
   logout: function() {
-    if (TramaStore.state.user) {
-      TramaStore.state.user.isLoggedIn = false;
-      TramaStore.saveUser();
-    }
+    TramaStore.state.user = null;
+    TramaStore.saveUser();
+    TramaStore.adminLogout();
+    this.updateAdminHeaderBadge();
     this.showToast("Sessão finalizada com sucesso.");
     window.location.hash = '#/login';
+    this.refreshCurrentRoute();
   },
 
   socialLoginGoogle: function() {
     this.showToast("Autenticando via Google Seguro...");
     setTimeout(() => {
+      TramaStore.adminLogout();
       TramaStore.state.user = {
         isLoggedIn: true,
-        name: "Camila Guimarães",
-        email: "camila@google.com",
+        name: "Cliente Google",
+        email: "cliente@gmail.com",
+        role: "client",
         phone: "(41) 99258-4033",
         savedMeasurements: { busto: 92, cintura: 72, quadril: 101, altura: 168 }
       };
       TramaStore.saveUser();
+      this.updateAdminHeaderBadge();
       this.showToast("Login com Google concluído!");
       window.location.hash = '#/conta';
+      this.refreshCurrentRoute();
     }, 600);
   },
 
   handleAuthSubmit: function() {
-    const email = document.getElementById('auth-email')?.value;
-    const name = document.getElementById('auth-name')?.value || "Cliente Trama";
+    const emailElem = document.getElementById('auth-email');
+    const passElem = document.getElementById('auth-password');
+    const nameElem = document.getElementById('auth-name');
+
+    const email = emailElem ? emailElem.value.trim() : '';
+    const pass = passElem ? passElem.value.trim() : '';
+    const name = nameElem ? nameElem.value.trim() : '';
+
+    if (!email) {
+      this.showToast("Por favor, informe seu e-mail.", "error");
+      if (emailElem) emailElem.focus();
+      return;
+    }
+
+    if (!pass) {
+      this.showToast("Por favor, digite sua senha de acesso.", "error");
+      if (passElem) passElem.focus();
+      return;
+    }
+
+    const adminCreds = TramaStore.getAdminAccount();
+    const isAdminEmail = (email.toLowerCase() === adminCreds.email.toLowerCase()) || 
+                         (email.toLowerCase() === 'oprojetotrama@gmail.com') ||
+                         (email.toLowerCase() === 'admin');
+
+    // 1. SE FOR O E-MAIL DA ADMINISTRADORA (oprojetotrama@gmail.com)
+    if (isAdminEmail) {
+      const success = TramaStore.adminLogin(email, pass);
+      if (success) {
+        this.updateAdminHeaderBadge();
+        this.showToast(`👑 Bem-vinda de volta ao Ateliê!`);
+        window.location.hash = '#/admin';
+        this.refreshCurrentRoute();
+        return;
+      } else {
+        this.showToast("Senha de administradora incorreta.", "error");
+        if (passElem) {
+          passElem.value = '';
+          passElem.focus();
+        }
+        return;
+      }
+    }
+
+    // 2. SE FOR UMA CLIENTE COMUM (Qualquer outro e-mail)
+    TramaStore.adminLogout();
+    const clientName = name || (email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1));
 
     TramaStore.state.user = {
       isLoggedIn: true,
-      name: name,
+      name: clientName,
       email: email,
+      role: 'client',
       phone: "(41) 99258-4033",
       savedMeasurements: { busto: 90, cintura: 70, quadril: 98, altura: 165 }
     };
     TramaStore.saveUser();
-    this.showToast(`Bem-vinda à Trama, ${name}!`);
+    this.updateAdminHeaderBadge();
+    this.showToast(`Bem-vinda à Trama, ${clientName}!`);
     window.location.hash = '#/conta';
+    this.refreshCurrentRoute();
   },
 
   // --------------------------------------------------------------------------

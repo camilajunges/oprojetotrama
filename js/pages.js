@@ -1095,9 +1095,25 @@ const TramaPages = {
 
     return `
       <div class="container section-spacing-sm">
+        ${TramaStore.isAdminLoggedIn() ? `
+          <div style="background: var(--midnight); color: var(--offwhite); padding: 18px 24px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--vinho-400); font-weight: 700; font-size: 14px;">👑 Conta de Administradora Autenticada</span>
+              </div>
+              <p style="font-size: 13px; color: var(--arctic); margin-top: 4px;">
+                Você tem permissão total para gerenciar o catálogo de peças, fotos, lookbook e pedidos.
+              </p>
+            </div>
+            <a href="#/admin" class="btn btn-primary btn-sm" style="background: var(--vinho-500); border: none;">
+              Acessar Painel do Ateliê →
+            </a>
+          </div>
+        ` : ''}
+
         <div class="flex-between flex-wrap gap-sm" style="border-bottom: 1px solid var(--slopes); padding-bottom: 20px; margin-bottom: 36px;">
           <div>
-            <span class="caps-label text-muted">Área Exclusiva da Cliente</span>
+            <span class="caps-label text-muted">${TramaStore.isAdminLoggedIn() ? 'Perfil da Proprietária' : 'Área Exclusiva da Cliente'}</span>
             <h1 class="serif-italic" style="font-size: 32px; margin-top: 4px;">Olá, ${user.name.split(' ')[0]}</h1>
             <p style="font-size: 13px; color: var(--apres-ski);">${user.email}</p>
           </div>
@@ -1107,6 +1123,11 @@ const TramaPages = {
         <div style="display: grid; grid-template-columns: 240px 1fr; gap: 40px;" class="account-layout">
           <!-- Menu Lateral da Conta -->
           <div style="display: flex; flex-direction: column; gap: 8px;">
+            ${TramaStore.isAdminLoggedIn() ? `
+              <a href="#/admin" class="btn btn-block btn-secondary" style="justify-content: flex-start; color: var(--vinho-500); border-color: var(--vinho-500); font-weight: 700; margin-bottom: 6px;">
+                👑 Ir ao Painel do Ateliê
+              </a>
+            ` : ''}
             <button class="btn btn-block ${activeTab === 'pedidos' ? 'btn-primary' : 'btn-secondary'}" onclick="TramaApp.switchAccountTab('pedidos')" style="justify-content: flex-start;">
               ${RabbitSVGs.icon('scissors', 16)} Meus Pedidos & Fila
             </button>
@@ -1272,13 +1293,16 @@ const TramaPages = {
           ` : ''}
 
           <div class="form-group">
-            <label class="form-label">E-mail</label>
-            <input type="email" id="auth-email" required placeholder="seu@email.com" class="form-input" />
+            <label class="form-label" for="auth-email">E-mail</label>
+            <input type="email" id="auth-email" required placeholder="seu@email.com" class="form-input" autofocus />
           </div>
 
           <div class="form-group">
-            <label class="form-label">Senha</label>
-            <input type="password" id="auth-password" required placeholder="••••••••" class="form-input" />
+            <label class="form-label" for="auth-password">Senha</label>
+            <div style="position: relative;">
+              <input type="password" id="auth-password" required placeholder="Digite sua senha..." class="form-input" style="padding-right: 40px;" />
+              <button type="button" onclick="const input = document.getElementById('auth-password'); input.type = input.type === 'password' ? 'text' : 'password';" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--apres-ski); font-size: 14px;" title="Mostrar/ocultar senha">👁️</button>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block" style="margin-top: 16px;">
@@ -1302,9 +1326,29 @@ const TramaPages = {
   // --------------------------------------------------------------------------
   renderAdmin: function(adminTab = 'produtos') {
     const adminCreds = TramaStore.getAdminAccount();
+    const currentUser = TramaStore.state.user;
 
-    // 1. SE NÃO ESTIVER AUTENTICADA: EXIBIR TELA DE LOGIN DA ADMINISTRADORA
+    // 1. SE NÃO ESTIVER AUTENTICADA COMO ADMIN:
     if (!TramaStore.isAdminLoggedIn()) {
+      // Se for cliente comum logada tentando acessar o ateliê
+      if (currentUser && currentUser.isLoggedIn && currentUser.email.toLowerCase() !== adminCreds.email.toLowerCase()) {
+        return `
+          <div class="container section-spacing text-center" style="max-width: 520px; margin: 40px auto; padding: 40px 24px; border: 1px solid var(--slopes); background: var(--bg);">
+            <div style="font-size: 40px; margin-bottom: 12px;">🔒</div>
+            <span class="caps-label" style="color: var(--vinho-500); font-weight: 700;">Acesso Restrito ao Ateliê</span>
+            <h1 class="serif-italic" style="font-size: 28px; margin: 8px 0 16px 0;">Área Exclusiva da Proprietária</h1>
+            <p style="font-size: 14px; color: var(--mountainside); margin-bottom: 24px;">
+              Você está conectada como <strong>${currentUser.email}</strong>. Esta seção administrativa é reservada exclusivamente para a administradora da loja (<code>${adminCreds.email}</code>).
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+              <a href="#/conta" class="btn btn-secondary btn-sm">Ir para Minha Conta</a>
+              <button class="btn btn-primary btn-sm" onclick="TramaApp.logout()">Entrar com Outra Conta</button>
+            </div>
+          </div>
+        `;
+      }
+
+      // Se for visitante não logada
       return `
         <div class="container section-spacing" style="max-width: 480px; margin: 40px auto; padding: 40px 24px;">
           <div style="text-align: center; margin-bottom: 32px;">
@@ -1314,7 +1358,7 @@ const TramaPages = {
             <span class="caps-label" style="color: var(--vinho-500); font-weight: 700;">Área Restrita • Projeto Trama</span>
             <h1 class="serif-italic" style="font-size: 32px; margin-top: 6px;">Acesso da Administradora</h1>
             <p style="font-size: 14px; color: var(--mountainside); margin-top: 8px;">
-              Apenas a conta de administradora pode gerenciar o catálogo, alterar fotos e editar dados das peças.
+              Apenas a conta de administradora (${adminCreds.email}) pode gerenciar o catálogo, alterar fotos e editar o site.
             </p>
           </div>
 
@@ -1322,7 +1366,7 @@ const TramaPages = {
             <form onsubmit="event.preventDefault(); TramaApp.submitAdminLogin();">
               <div class="form-group" style="margin-bottom: 18px;">
                 <label class="form-label" for="admin-email-input">E-mail da Administradora</label>
-                <input type="text" id="admin-email-input" class="form-input" placeholder="Ex: ${adminCreds.email}" value="${adminCreds.email}" required autofocus style="font-size: 14px;" />
+                <input type="email" id="admin-email-input" class="form-input" placeholder="Ex: ${adminCreds.email}" value="${adminCreds.email}" required autofocus style="font-size: 14px;" />
               </div>
 
               <div class="form-group" style="margin-bottom: 24px;">
@@ -1336,13 +1380,6 @@ const TramaPages = {
               <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; justify-content: center; font-size: 13px;">
                 Entrar no Painel do Ateliê →
               </button>
-
-              <div style="margin-top: 18px; padding: 12px; background: var(--card-bg-subtle); border-left: 2px solid var(--vinho-500); font-size: 12px; color: var(--apres-ski);">
-                🔒 <strong>Conta pré-configurada:</strong><br/>
-                E-mail: <code>${adminCreds.email}</code><br/>
-                Senha: <code>${adminCreds.password}</code> (ou <code>trama2026</code>)<br/>
-                <em>Você pode alterar seu e-mail e senha na aba "⚙️ Conta da Administradora".</em>
-              </div>
             </form>
           </div>
 
