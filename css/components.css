@@ -111,7 +111,7 @@
   border-bottom: 2px solid var(--vinho-600);
 }
 
-/* Mobile Menu Button & Drawer */
+/* Mobile Menu Button */
 .mobile-menu-btn {
   display: none;
   background: none;
@@ -119,113 +119,6 @@
   cursor: pointer;
   padding: 8px;
   color: inherit;
-}
-
-.mobile-menu-backdrop {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(9, 15, 21, 0.65);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 1099;
-}
-
-.mobile-menu-backdrop.open {
-  display: block;
-}
-
-.mobile-nav-header {
-  display: none;
-}
-
-@media (max-width: 900px) {
-  .mobile-menu-btn {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    color: inherit;
-  }
-
-  .header-nav {
-    display: none;
-  }
-
-  .header-nav.mobile-open {
-    display: flex !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 82vw;
-    max-width: 320px;
-    height: 100vh;
-    height: 100dvh;
-    background-color: var(--offwhite);
-    z-index: 1100;
-    flex-direction: column;
-    padding: 24px;
-    gap: 6px;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
-    border-right: 1px solid var(--slopes);
-    overflow-y: auto;
-    animation: slideInLeft 0.3s ease;
-  }
-
-  .mobile-nav-header {
-    display: flex !important;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 14px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid var(--slopes);
-  }
-
-  .mobile-nav-close {
-    background: none;
-    border: none;
-    font-size: 22px;
-    cursor: pointer;
-    padding: 6px 10px;
-    color: var(--midnight);
-  }
-
-  .header-nav.mobile-open .nav-link {
-    font-size: 14px;
-    padding: 12px 6px;
-    border-bottom: 1px solid rgba(179, 183, 186, 0.25);
-    display: block;
-    width: 100%;
-    color: var(--midnight);
-  }
-
-  .header-container {
-    grid-template-columns: auto 1fr auto;
-    gap: 8px;
-    padding: 0 16px;
-  }
-
-  .logo-text {
-    font-size: 13px !important;
-    letter-spacing: 0.10em !important;
-  }
-
-  .header-actions {
-    gap: 8px;
-  }
-
-  .action-btn {
-    padding: 6px 4px;
-  }
-}
-
-@keyframes slideInLeft {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
 }
 
 /* Logo Central */

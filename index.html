@@ -65,25 +65,15 @@
       <!-- Lado Esquerdo: Menu Principal e Menu Mobile -->
       <div style="display: flex; align-items: center; gap: 16px;">
         <button class="mobile-menu-btn" onclick="TramaApp.toggleMobileMenu()" aria-label="Abrir Menu">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
         </button>
 
-        <!-- Backdrop do Menu Mobile -->
-        <div id="mobile-menu-backdrop" class="mobile-menu-backdrop" onclick="TramaApp.closeMobileMenu()"></div>
-
         <nav class="header-nav" id="header-nav-list" role="navigation">
-          <div class="mobile-nav-header">
-            <span class="caps-label" style="color: var(--vinho-500); font-weight: 700;">Menu • Projeto Trama</span>
-            <button type="button" class="mobile-nav-close" onclick="TramaApp.closeMobileMenu()" aria-label="Fechar Menu">✕</button>
-          </div>
           <a href="#/sob-encomenda" class="nav-link link-underlined">Sob Encomenda</a>
           <a href="#/sob-encomenda?estetica=todos" class="nav-link link-underlined">Novidades</a>
           <a href="#/sob-encomenda?estetica=fluido" class="nav-link link-underlined">Fluido / Reto</a>
           <a href="#/lookbook" class="nav-link link-underlined">Lookbook</a>
           <a href="#/sobre" class="nav-link link-underlined">A Trama</a>
-          <a href="#/como-e-feita" class="nav-link link-underlined">Como é Feita</a>
-          <a href="#/guia-de-medidas" class="nav-link link-underlined">Guia de Medidas</a>
-          <a href="#/conta" class="nav-link link-underlined" style="margin-top: 10px; color: var(--vinho-600); font-weight: 700;">Minha Conta & Medidas</a>
         </nav>
       </div>
 
