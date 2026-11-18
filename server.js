@@ -246,6 +246,12 @@ const server = http.createServer(async (req, res) => {
     return sendJSON(res, 201, { success: true, order: created });
   }
 
+  // 14.1 PEDIDOS: LIMPAR TODOS (PARA TESTES E SIMULAÇÃO)
+  if (pathname === '/api/orders' && method === 'DELETE') {
+    TramaDB.orders.clear();
+    return sendJSON(res, 200, { success: true, message: "Fila de pedidos limpa com sucesso." });
+  }
+
   // ---------------------------------------------------------------------------
   // SERVIR ARQUIVOS ESTÁTICOS DO FRONTEND (HTML, CSS, JS, IMAGENS)
   // ---------------------------------------------------------------------------

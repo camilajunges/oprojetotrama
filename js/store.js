@@ -15,7 +15,7 @@ const TramaStore = {
     currentAestheticsFilter: 'todos',
     weeklyCapacity: {
       total: 25,
-      booked: 18
+      booked: 0
     },
     siteContent: null,
     isAdmin: false,           // Apenas a dona do site tem acesso às edições
@@ -211,37 +211,20 @@ const TramaStore = {
         try { this.state.wishlist = JSON.parse(savedWishlist); } catch (e) {}
       }
 
-      // 6. Carregar Pedidos
+      // 6. Carregar Pedidos (inicia sempre limpo/vazio para testes)
       const savedOrders = this._getStorage('trama_orders');
       if (savedOrders) {
-        try { this.state.orders = JSON.parse(savedOrders); } catch (e) {}
+        try {
+          const parsedOrders = JSON.parse(savedOrders);
+          // Purga o pedido de exemplo TRM-8924 caso ainda exista no cache
+          this.state.orders = Array.isArray(parsedOrders) ? parsedOrders.filter(o => o.id !== 'TRM-8924') : [];
+        } catch (e) {
+          this.state.orders = [];
+        }
       } else {
-        this.state.orders = [
-          {
-            id: "TRM-8924",
-            date: "14/11/2026",
-            statusIndex: 3,
-            statusName: "Em costura",
-            estimatedDelivery: "05/12/2026",
-            trackingCode: "TRM-SP-982194BR",
-            items: [
-              {
-                productId: TramaData.products[0]?.id || "colete-estruturado-alfaitaria",
-                name: TramaData.products[0]?.name || "Colete Estruturado em Alfaitaria",
-                sizeMode: "Sob Medida",
-                measurements: { busto: 92, cintura: 72, quadril: 101, altura: 168 },
-                fabric: "Linho Puro 100%",
-                color: "Off-White Natural",
-                price: 480,
-                qty: 1
-              }
-            ],
-            total: 480,
-            paymentMethod: "Pix (5% off aplicado)"
-          }
-        ];
-        this.saveOrders();
+        this.state.orders = [];
       }
+      this.saveOrders();
 
       // 7. Carregar Clientes Salvas no Banco Local / Cache
       const savedCustomers = this._getStorage('trama_customers');
@@ -261,7 +244,7 @@ const TramaStore = {
             quadril: 101,
             altura: 168,
             observacoes: 'Preferência por caimento solto na linha do quadril.',
-            total_orders: 1
+            total_orders: 0
           }
         ];
         this._setStorage('trama_customers', JSON.stringify(this.state.customers));
@@ -510,6 +493,10 @@ const TramaStore = {
   // --------------------------------------------------------------------------
   // GERENCIAMENTO DE PEÇAS & PERSISTÊNCIA (CMS EXCLUSIVO DA DONA)
   // --------------------------------------------------------------------------
+  getProducts: function() {
+    return TramaData.products || [];
+  },
+
   saveCatalog: function(notify = true) {
     try {
       this._setStorage('trama_catalog', JSON.stringify(TramaData.products));
@@ -740,6 +727,17 @@ const TramaStore = {
   saveOrders: function() {
     this._setStorage('trama_orders', JSON.stringify(this.state.orders));
     this.notifyUpdate('orders');
+  },
+
+  clearOrders: function() {
+    this.state.orders = [];
+    this.state.weeklyCapacity.booked = 0;
+    this.saveOrders();
+    if (typeof fetch !== 'undefined') {
+      fetch(`${this.apiBaseUrl}/api/orders`, { method: 'DELETE' }).catch(() => {});
+    }
+    this.notifyUpdate('orders');
+    return true;
   },
 
   addToCart: function(item) {

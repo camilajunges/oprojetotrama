@@ -590,6 +590,14 @@ const TramaDB = {
         };
       }
       return null;
+    },
+
+    clear: function() {
+      if (isNativeSqlite && db) {
+        db.prepare('DELETE FROM orders').run();
+        return true;
+      }
+      return false;
     }
   },
 

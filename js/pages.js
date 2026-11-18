@@ -1905,6 +1905,18 @@ const TramaPages = {
             </div>
           `).join('')}
         </div>
+
+        <div style="text-align: center; margin-top: 48px; padding-top: 24px; border-top: 1px dashed var(--slopes);">
+          ${isAdmin ? `
+            <a href="#/admin?tab=lookbook" class="btn btn-secondary btn-sm">
+              ⚙️ Abrir Gerenciador de Lookbook no Painel do Ateliê
+            </a>
+          ` : `
+            <a href="#/admin?tab=lookbook" style="font-size: 13px; color: var(--apres-ski); text-decoration: underline;">
+              🔒 Acesso da Administradora: Fazer login para gerenciar o Lookbook
+            </a>
+          `}
+        </div>
       </div>
     `;
   },

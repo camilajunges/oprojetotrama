@@ -714,8 +714,8 @@ const TramaApp = {
 
   openLookEditor: function(lookId = null) {
     if (!TramaStore.isAdminLoggedIn()) {
-      this.showToast("Apenas a administradora pode gerenciar o lookbook.", "error");
-      window.location.hash = '#/admin';
+      this.showToast("Apenas a administradora pode gerenciar o lookbook. Faça login para continuar.", "error");
+      window.location.hash = '#/admin?tab=lookbook';
       return;
     }
 
