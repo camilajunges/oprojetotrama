@@ -82,6 +82,21 @@ const TramaStore = {
         this.saveCatalog(false);
       }
 
+      // 2.1 Carregar Lookbook Salvo
+      const savedLookbook = this._getStorage('trama_lookbook');
+      if (savedLookbook) {
+        try {
+          const lb = JSON.parse(savedLookbook);
+          if (Array.isArray(lb) && lb.length > 0) {
+            TramaData.lookbook = lb;
+          }
+        } catch (e) {
+          console.warn("Erro ao ler lookbook salvo:", e);
+        }
+      } else {
+        this.saveLookbook(false);
+      }
+
       // 3. Carregar Conteúdos do Site
       const savedContent = this._getStorage('trama_site_content');
       if (savedContent) {
@@ -411,8 +426,64 @@ const TramaStore = {
     return null;
   },
 
+  // Gerenciamento e Persistência do Lookbook
+  saveLookbook: function(notify = true) {
+    try {
+      this._setStorage('trama_lookbook', JSON.stringify(TramaData.lookbook || []));
+      if (notify) this.notifyUpdate('lookbook');
+    } catch (e) {
+      console.error("Erro ao salvar lookbook no localStorage:", e);
+      if (e.name === 'QuotaExceededError') {
+        alert("O limite de armazenamento de imagens do seu navegador foi atingido. Tente usar imagens menores ou links web.");
+      }
+    }
+  },
+
+  getLookbook: function() {
+    return TramaData.lookbook || [];
+  },
+
+  saveLook: function(lookData) {
+    if (!lookData) return null;
+    if (!TramaData.lookbook) TramaData.lookbook = [];
+
+    const existingIndex = TramaData.lookbook.findIndex(l => l.id === lookData.id);
+
+    if (existingIndex > -1) {
+      TramaData.lookbook[existingIndex] = {
+        ...TramaData.lookbook[existingIndex],
+        ...lookData
+      };
+      this.saveLookbook(true);
+      return { action: 'updated', look: TramaData.lookbook[existingIndex] };
+    } else {
+      const newLook = {
+        id: lookData.id || `look-${Date.now()}`,
+        title: lookData.title || "Novo Ensaio",
+        subtitle: lookData.subtitle || "",
+        image: lookData.image || "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=80",
+        items: Array.isArray(lookData.items) ? lookData.items : []
+      };
+      TramaData.lookbook.push(newLook);
+      this.saveLookbook(true);
+      return { action: 'created', look: newLook };
+    }
+  },
+
+  deleteLook: function(lookId) {
+    if (!TramaData.lookbook) return null;
+    const index = TramaData.lookbook.findIndex(l => l.id === lookId);
+    if (index > -1) {
+      const removed = TramaData.lookbook.splice(index, 1)[0];
+      this.saveLookbook(true);
+      return removed;
+    }
+    return null;
+  },
+
   resetCatalogToDefaults: function() {
     this._removeStorage('trama_catalog');
+    this._removeStorage('trama_lookbook');
     this._removeStorage('trama_site_content');
     location.reload();
   },

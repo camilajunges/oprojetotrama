@@ -75,13 +75,14 @@
 }
 
 .header-container {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  position: relative;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   height: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 var(--gutter-mobile);
+  padding: 0 20px;
 }
 
 @media (min-width: 1024px) {
@@ -91,19 +92,30 @@
 }
 
 /* Menu Esquerda */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 5;
+  flex: 1;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
 .header-nav {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 18px;
 }
 
 .nav-link {
-  font-size: var(--text-xs);
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: var(--tracking-caps);
+  letter-spacing: 0.12em;
   font-weight: 500;
   position: relative;
   padding: 6px 0;
+  white-space: nowrap;
 }
 
 .nav-link.active {
@@ -119,31 +131,43 @@
   cursor: pointer;
   padding: 8px;
   color: inherit;
+  line-height: 1;
 }
 
-/* Logo Central */
+/* Logo Central - Rigorosamente Centralizada no Viewport */
 .header-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
   text-decoration: none;
+  z-index: 10;
+  white-space: nowrap;
+  pointer-events: auto;
 }
 
 .logo-symbol {
   width: 28px;
   height: 28px;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logo-text {
   font-family: var(--font-straight);
   font-weight: 700;
-  font-size: 15px;
+  font-size: 14px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: inherit;
+  white-space: nowrap;
 }
 
 /* Utilitários Direita */
@@ -151,7 +175,9 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 20px;
+  gap: 16px;
+  z-index: 5;
+  flex: 1;
 }
 
 .action-btn {
@@ -159,8 +185,9 @@
   border: none;
   cursor: pointer;
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   color: inherit;
   padding: 6px;
   transition: opacity var(--transition-fast);
@@ -1077,3 +1104,84 @@
     color: black;
   }
 }
+
+/* ==========================================================================
+   RESPONSIVIDADE DO HEADER & LOOKBOOK
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .header-nav {
+    display: none;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 64px);
+    background-color: var(--bg);
+    flex-direction: column;
+    padding: 32px 24px;
+    gap: 16px;
+    z-index: 99;
+    border-top: 1px solid var(--slopes);
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .header-nav.mobile-open {
+    display: flex;
+  }
+
+  .header-nav .nav-link {
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--slopes);
+    width: 100%;
+  }
+
+  .header-actions {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .header-container {
+    padding: 0 14px;
+  }
+
+  .logo-text {
+    font-size: 13px;
+    letter-spacing: 0.12em;
+  }
+
+  .logo-symbol {
+    width: 24px;
+    height: 24px;
+  }
+
+  .header-actions {
+    gap: 6px;
+  }
+
+  .action-btn {
+    padding: 4px;
+  }
+
+  .header-left {
+    gap: 8px;
+  }
+}
+
+/* Responsividade do Lookbook */
+@media (max-width: 820px) {
+  .lookbook-row {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+}
+

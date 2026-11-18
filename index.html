@@ -21,32 +21,6 @@
   <link rel="stylesheet" href="css/design-system.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/animations.css" />
-
-  <style>
-    /* Estilos específicos para o menu mobile e modais adicionais */
-    @media (max-width: 900px) {
-      .header-nav {
-        display: none;
-        position: fixed;
-        top: 64px;
-        left: 0;
-        width: 100%;
-        height: calc(100vh - 64px);
-        background: var(--bg);
-        flex-direction: column;
-        padding: 40px 24px;
-        gap: 20px;
-        z-index: 99;
-        overflow-y: auto;
-      }
-      .header-nav.mobile-open {
-        display: flex;
-      }
-      .mobile-menu-btn {
-        display: block;
-      }
-    }
-  </style>
 </head>
 <body>
 
@@ -63,17 +37,17 @@
     <div class="header-container">
       
       <!-- Lado Esquerdo: Menu Principal e Menu Mobile -->
-      <div style="display: flex; align-items: center; gap: 16px;">
+      <div class="header-left">
         <button class="mobile-menu-btn" onclick="TramaApp.toggleMobileMenu()" aria-label="Abrir Menu">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg>
         </button>
 
         <nav class="header-nav" id="header-nav-list" role="navigation">
-          <a href="#/sob-encomenda" class="nav-link link-underlined">Sob Encomenda</a>
-          <a href="#/sob-encomenda?estetica=todos" class="nav-link link-underlined">Novidades</a>
-          <a href="#/sob-encomenda?estetica=fluido" class="nav-link link-underlined">Fluido / Reto</a>
-          <a href="#/lookbook" class="nav-link link-underlined">Lookbook</a>
-          <a href="#/sobre" class="nav-link link-underlined">A Trama</a>
+          <a href="#/sob-encomenda" class="nav-link link-underlined" onclick="TramaApp.closeMobileMenu()">Sob Encomenda</a>
+          <a href="#/sob-encomenda?estetica=todos" class="nav-link link-underlined" onclick="TramaApp.closeMobileMenu()">Novidades</a>
+          <a href="#/sob-encomenda?estetica=fluido" class="nav-link link-underlined" onclick="TramaApp.closeMobileMenu()">Fluido / Reto</a>
+          <a href="#/lookbook" class="nav-link link-underlined" onclick="TramaApp.closeMobileMenu()">Lookbook</a>
+          <a href="#/sobre" class="nav-link link-underlined" onclick="TramaApp.closeMobileMenu()">A Trama</a>
         </nav>
       </div>
 
@@ -371,6 +345,71 @@
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
           <button type="button" class="btn btn-secondary" onclick="TramaApp.closeContentEditor()">Cancelar</button>
           <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Edição de Lookbook / Ensaios da Administradora -->
+  <div class="modal-overlay" id="lookbook-editor-modal" onclick="if(event.target === this) TramaApp.closeLookEditor()">
+    <div class="modal-box" role="dialog" aria-label="Editor de Ensaio do Lookbook" style="max-width: 760px;">
+      <button class="modal-close-btn" onclick="TramaApp.closeLookEditor()" aria-label="Fechar">✕</button>
+      <span class="caps-label" style="color: var(--vinho-500); font-weight: 700;">Curadoria & Campanhas Visuais</span>
+      <h2 class="serif-italic" style="font-size: 28px; margin: 6px 0 16px 0;" id="look-editor-modal-title">Editar Ensaio do Lookbook</h2>
+      
+      <form id="lookbook-editor-form" onsubmit="event.preventDefault(); TramaApp.saveLookFromModal();">
+        <input type="hidden" id="edit-look-id" />
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" for="edit-look-title">Título do Ensaio *</label>
+          <input type="text" id="edit-look-title" class="form-input" placeholder="Ex: O Silêncio da Forma" required />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" for="edit-look-subtitle">Subtítulo / Descrição Poética</label>
+          <textarea id="edit-look-subtitle" class="form-input" rows="2" placeholder="Ex: A estrutura do colete encontra o movimento da calça fluida em uma composição equilibrada..." style="resize: vertical;"></textarea>
+        </div>
+
+        <!-- Seção de Fotografia do Ensaio -->
+        <div style="border: 1px solid var(--slopes); padding: 18px; margin-bottom: 20px; background: var(--card-bg-subtle);">
+          <label class="form-label" style="font-weight: 700; margin-bottom: 8px; display: block;">Fotografia do Lookbook *</label>
+          
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+            <label class="btn btn-primary btn-sm" style="cursor: pointer; margin: 0;">
+              📁 Escolher Foto do Computador
+              <input type="file" id="edit-look-file-input" accept="image/*" style="display: none;" onchange="TramaApp.handleLookImageUpload(this.files)" />
+            </label>
+            <span style="font-size: 12px; color: var(--apres-ski);">ou cole a URL da imagem abaixo:</span>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <input type="text" id="edit-look-image-url" class="form-input" placeholder="https://images.unsplash.com/... ou link de imagem" oninput="TramaApp.previewLookImage(this.value)" />
+          </div>
+
+          <!-- Preview da Imagem Selecionada -->
+          <div id="edit-look-image-preview-container" style="display: flex; align-items: center; gap: 16px; margin-top: 12px;">
+            <img id="edit-look-image-preview" src="" alt="Prévia do Look" style="width: 140px; aspect-ratio: 4/5; object-fit: cover; border: 1px solid var(--slopes); background: #eee; display: none;" />
+            <div id="edit-look-image-status" style="font-size: 13px; color: var(--apres-ski);">Nenhuma foto selecionada ainda.</div>
+          </div>
+        </div>
+
+        <!-- Peças do Catálogo Vinculadas a este Look -->
+        <div style="border: 1px solid var(--slopes); padding: 18px; margin-bottom: 24px; background: var(--card-bg-subtle);">
+          <label class="form-label" style="font-weight: 700; margin-bottom: 6px; display: block;">Peças Deste Look (Compre o Look)</label>
+          <p style="font-size: 12px; color: var(--apres-ski); margin-bottom: 12px;">Marque as peças do catálogo que a cliente poderá clicar e encomendar:</p>
+          <div id="edit-look-products-checklist" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; max-height: 200px; overflow-y: auto; padding-right: 4px;">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 24px;">
+          <button type="button" id="btn-delete-look" class="btn btn-secondary btn-sm" style="color: var(--vinho-500); border-color: var(--vinho-500); display: none;" onclick="TramaApp.deleteCurrentLookFromModal()">
+            🗑️ Excluir Ensaio
+          </button>
+          <div style="display: flex; gap: 12px; margin-left: auto;">
+            <button type="button" class="btn btn-secondary" onclick="TramaApp.closeLookEditor()">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Salvar Ensaio no Lookbook</button>
+          </div>
         </div>
       </form>
     </div>

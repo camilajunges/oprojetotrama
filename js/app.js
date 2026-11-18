@@ -32,7 +32,7 @@ const TramaApp = {
       if (topic === 'cart') {
         this.renderDrawerContent();
       }
-      if (topic === 'catalog' || topic === 'siteContent' || topic === 'adminAuth') {
+      if (topic === 'catalog' || topic === 'lookbook' || topic === 'siteContent' || topic === 'adminAuth') {
         this.refreshCurrentRoute();
       }
     });
@@ -695,6 +695,225 @@ const TramaApp = {
     this.closeContentEditor();
     this.showToast("Conteúdos do site atualizados com sucesso!");
     this.refreshCurrentRoute();
+  },
+
+  // --------------------------------------------------------------------------
+  // CMS: EDITOR VISUAL DE LOOKBOOK / ENSAIOS FOTOGRÁFICOS
+  // --------------------------------------------------------------------------
+  currentEditingLookImage: null,
+
+  openLookEditor: function(lookId = null) {
+    if (!TramaStore.isAdminLoggedIn()) {
+      this.showToast("Apenas a administradora pode gerenciar o lookbook.", "error");
+      window.location.hash = '#/admin';
+      return;
+    }
+
+    const modal = document.getElementById('lookbook-editor-modal');
+    const titleElem = document.getElementById('look-editor-modal-title');
+    const deleteBtn = document.getElementById('btn-delete-look');
+    const idInput = document.getElementById('edit-look-id');
+    const titleInput = document.getElementById('edit-look-title');
+    const subtitleInput = document.getElementById('edit-look-subtitle');
+    const urlInput = document.getElementById('edit-look-image-url');
+    const previewImg = document.getElementById('edit-look-image-preview');
+    const statusText = document.getElementById('edit-look-image-status');
+
+    if (!modal) return;
+
+    let selectedProductIds = [];
+
+    if (lookId) {
+      const look = (TramaData.lookbook || []).find(l => l.id === lookId);
+      if (!look) return;
+
+      if (titleElem) titleElem.textContent = `Editar Ensaio: ${look.title}`;
+      if (deleteBtn) deleteBtn.style.display = 'block';
+
+      if (idInput) idInput.value = look.id;
+      if (titleInput) titleInput.value = look.title || '';
+      if (subtitleInput) subtitleInput.value = look.subtitle || '';
+      if (urlInput) urlInput.value = (look.image && !look.image.startsWith('data:')) ? look.image : '';
+
+      this.currentEditingLookImage = look.image || null;
+      selectedProductIds = (look.items || []).map(it => it.productId);
+    } else {
+      if (titleElem) titleElem.textContent = 'Adicionar Novo Ensaio ao Lookbook';
+      if (deleteBtn) deleteBtn.style.display = 'none';
+
+      if (idInput) idInput.value = '';
+      if (titleInput) titleInput.value = '';
+      if (subtitleInput) subtitleInput.value = '';
+      if (urlInput) urlInput.value = '';
+
+      this.currentEditingLookImage = null;
+      selectedProductIds = [];
+    }
+
+    // Atualizar preview da imagem
+    if (this.currentEditingLookImage) {
+      if (previewImg) {
+        previewImg.src = this.currentEditingLookImage;
+        previewImg.style.display = 'block';
+      }
+      if (statusText) statusText.textContent = '✅ Fotografia carregada';
+    } else {
+      if (previewImg) {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+      }
+      if (statusText) statusText.textContent = 'Nenhuma foto selecionada ainda.';
+    }
+
+    // Renderizar checklist de peças do catálogo
+    this.renderLookProductChecklist(selectedProductIds);
+
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  },
+
+  closeLookEditor: function() {
+    const modal = document.getElementById('lookbook-editor-modal');
+    if (modal) modal.classList.remove('open');
+    document.body.style.overflow = '';
+  },
+
+  handleLookImageUpload: async function(files) {
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    this.showToast("Otimizando fotografia do ensaio...");
+
+    try {
+      const compressedDataUrl = await TramaStore.compressImageFile(file, 1400, 0.85);
+      this.currentEditingLookImage = compressedDataUrl;
+
+      const previewImg = document.getElementById('edit-look-image-preview');
+      const statusText = document.getElementById('edit-look-image-status');
+      const urlInput = document.getElementById('edit-look-image-url');
+
+      if (previewImg) {
+        previewImg.src = compressedDataUrl;
+        previewImg.style.display = 'block';
+      }
+      if (statusText) statusText.textContent = '✅ Foto do computador pronta para salvar';
+      if (urlInput) urlInput.value = '';
+
+      this.showToast("Fotografia otimizada com sucesso!");
+    } catch (err) {
+      console.error("Erro ao comprimir imagem do look:", err);
+      this.showToast("Não foi possível processar a imagem.", "error");
+    }
+
+    const fileInput = document.getElementById('edit-look-file-input');
+    if (fileInput) fileInput.value = '';
+  },
+
+  previewLookImage: function(url) {
+    const trimmed = (url || '').trim();
+    const previewImg = document.getElementById('edit-look-image-preview');
+    const statusText = document.getElementById('edit-look-image-status');
+
+    if (trimmed) {
+      this.currentEditingLookImage = trimmed;
+      if (previewImg) {
+        previewImg.src = trimmed;
+        previewImg.style.display = 'block';
+      }
+      if (statusText) statusText.textContent = '✅ URL de imagem definida';
+    } else {
+      if (!this.currentEditingLookImage) {
+        if (previewImg) previewImg.style.display = 'none';
+        if (statusText) statusText.textContent = 'Nenhuma foto selecionada ainda.';
+      }
+    }
+  },
+
+  renderLookProductChecklist: function(selectedProductIds = []) {
+    const container = document.getElementById('edit-look-products-checklist');
+    if (!container) return;
+
+    const products = TramaStore.getProducts();
+    if (!products || products.length === 0) {
+      container.innerHTML = '<div style="font-size: 13px; color: var(--apres-ski);">Nenhuma peça cadastrada no catálogo.</div>';
+      return;
+    }
+
+    container.innerHTML = products.map(p => {
+      const checked = selectedProductIds.includes(p.id) ? 'checked' : '';
+      const img = TramaPages.getProductImage(p, 0);
+      return `
+        <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; padding: 8px 10px; border: 1px solid var(--slopes); background: var(--bg); user-select: none;">
+          <input type="checkbox" name="look-product-item" value="${p.id}" data-title="${p.name}" ${checked} style="width: 16px; height: 16px; accent-color: var(--vinho-500);" />
+          <img src="${img}" style="width: 32px; height: 32px; object-fit: cover; border: 1px solid var(--slopes);" alt="${p.name}" />
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name}</div>
+            <div style="font-size: 11px; color: var(--apres-ski);">R$ ${p.price.toFixed(2)}</div>
+          </div>
+        </label>
+      `;
+    }).join('');
+  },
+
+  saveLookFromModal: function() {
+    const idInput = document.getElementById('edit-look-id');
+    const titleInput = document.getElementById('edit-look-title');
+    const subtitleInput = document.getElementById('edit-look-subtitle');
+    const urlInput = document.getElementById('edit-look-image-url');
+
+    const id = idInput ? idInput.value.trim() : '';
+    const title = titleInput ? titleInput.value.trim() : '';
+    const subtitle = subtitleInput ? subtitleInput.value.trim() : '';
+    const image = this.currentEditingLookImage || (urlInput ? urlInput.value.trim() : '');
+
+    if (!title) {
+      this.showToast("Informe o título do ensaio.", "error");
+      return;
+    }
+
+    if (!image) {
+      this.showToast("Por favor, selecione uma foto ou insira a URL da imagem.", "error");
+      return;
+    }
+
+    // Coletar peças selecionadas
+    const checkboxes = Array.from(document.querySelectorAll('#edit-look-products-checklist input[type="checkbox"]:checked'));
+    const items = checkboxes.map(cb => ({
+      productId: cb.value,
+      title: cb.getAttribute('data-title') || cb.value
+    }));
+
+    const result = TramaStore.saveLook({
+      id: id || undefined,
+      title: title,
+      subtitle: subtitle,
+      image: image,
+      items: items
+    });
+
+    this.closeLookEditor();
+    this.showToast(result && result.action === 'updated' ? "Ensaio atualizado com sucesso!" : "Novo ensaio adicionado ao Lookbook!");
+    this.refreshCurrentRoute();
+  },
+
+  deleteLookPrompt: function(lookId) {
+    if (!TramaStore.isAdminLoggedIn()) return;
+    const look = (TramaData.lookbook || []).find(l => l.id === lookId);
+    const title = look ? look.title : 'este ensaio';
+
+    if (confirm(`Tem certeza de que deseja excluir o ensaio "${title}" do Lookbook?`)) {
+      TramaStore.deleteLook(lookId);
+      this.showToast(`Ensaio "${title}" excluído do Lookbook.`);
+      this.refreshCurrentRoute();
+    }
+  },
+
+  deleteCurrentLookFromModal: function() {
+    const idInput = document.getElementById('edit-look-id');
+    const id = idInput ? idInput.value.trim() : '';
+    if (id) {
+      this.closeLookEditor();
+      this.deleteLookPrompt(id);
+    }
   },
 
   switchAdminTab: function(tabName) {

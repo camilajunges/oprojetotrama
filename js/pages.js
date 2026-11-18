@@ -1423,13 +1423,16 @@ const TramaPages = {
         <!-- Abas do Painel Administrativo -->
         <div class="tab-nav" style="margin-bottom: 24px;">
           <button class="tab-nav-btn ${adminTab === 'produtos' ? 'active' : ''}" onclick="TramaApp.switchAdminTab('produtos')">
-            🛍️ Gestão de Peças & Imagens (${products.length})
+            🛍️ Peças & Imagens (${products.length})
+          </button>
+          <button class="tab-nav-btn ${adminTab === 'lookbook' ? 'active' : ''}" onclick="TramaApp.switchAdminTab('lookbook')">
+            📸 Lookbook (${(TramaData.lookbook || []).length})
           </button>
           <button class="tab-nav-btn ${adminTab === 'pedidos' ? 'active' : ''}" onclick="TramaApp.switchAdminTab('pedidos')">
             ✂️ Fila de Produção (${orders.length})
           </button>
           <button class="tab-nav-btn ${adminTab === 'conteudo' ? 'active' : ''}" onclick="TramaApp.switchAdminTab('conteudo')">
-            🎨 Textos & Banners do Site
+            🎨 Textos & Banners
           </button>
           <button class="tab-nav-btn ${adminTab === 'conta' ? 'active' : ''}" onclick="TramaApp.switchAdminTab('conta')">
             ⚙️ Conta da Administradora
@@ -1474,6 +1477,55 @@ const TramaPages = {
                       <a href="#/produto/${p.id}" class="btn btn-secondary btn-sm" title="Ver como fica na loja">👁️ Ver</a>
                       <button class="btn btn-primary btn-sm" onclick="TramaApp.openProductEditor('${p.id}')">✏️ Editar / Fotos</button>
                       <button class="btn btn-secondary btn-sm" style="color: var(--vinho-500); border-color: var(--vinho-500);" onclick="TramaApp.deleteProductPrompt('${p.id}')">🗑️</button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA 1.5: GESTÃO DO LOOKBOOK & ENSAIOS FOTOGRÁFICOS -->
+        <div id="admin-tab-lookbook" style="${adminTab === 'lookbook' ? '' : 'display: none;'}">
+          <div style="background: var(--card-bg); border: 1px solid var(--midnight); padding: 24px;">
+            <div class="flex-between flex-wrap gap-sm" style="margin-bottom: 20px;">
+              <div>
+                <h2 class="caps-label" style="font-size: 14px;">Ensaios Fotográficos do Lookbook</h2>
+                <p style="font-size: 13px; color: var(--apres-ski);">Adicione fotos conceituais dos looks e vincule quais peças do catálogo aparecem em cada imagem.</p>
+              </div>
+              <div>
+                <button class="btn btn-primary btn-sm" onclick="TramaApp.openLookEditor()">
+                  + Novo Ensaio do Lookbook
+                </button>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              ${(TramaData.lookbook || []).map(lb => {
+                const img = lb.image || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=80';
+                const itemsCount = lb.items ? lb.items.length : 0;
+                return `
+                  <div style="display: grid; grid-template-columns: 80px 1fr auto; gap: 20px; align-items: center; padding: 16px; border: 1px solid var(--slopes); background: var(--bg);">
+                    <img src="${img}" style="width: 80px; aspect-ratio: 4/5; object-fit: cover; border: 1px solid var(--slopes);" alt="${lb.title}" />
+                    <div>
+                      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <span class="badge badge-sob-encomenda" style="font-size: 10px;">${lb.id}</span>
+                        <span style="font-size: 11px; color: var(--apres-ski);">${itemsCount} peça(s) vinculada(s)</span>
+                      </div>
+                      <div style="font-size: 16px; font-weight: 700; color: var(--midnight);">${lb.title}</div>
+                      <div style="font-size: 13px; color: var(--apres-ski); margin: 2px 0;">${lb.subtitle || ''}</div>
+                      <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+                        ${(lb.items || []).map(it => `
+                          <span style="background: var(--card-bg-subtle); border: 1px solid var(--slopes); padding: 2px 8px; font-size: 11px; font-weight: 600;">
+                            🛍️ ${it.title}
+                          </span>
+                        `).join('')}
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                      <a href="#/lookbook" class="btn btn-secondary btn-sm" title="Ver como fica na vitrine de lookbook">👁️ Ver</a>
+                      <button class="btn btn-primary btn-sm" onclick="TramaApp.openLookEditor('${lb.id}')">✏️ Editar / Foto</button>
+                      <button class="btn btn-secondary btn-sm" style="color: var(--vinho-500); border-color: var(--vinho-500);" onclick="TramaApp.deleteLookPrompt('${lb.id}')">🗑️</button>
                     </div>
                   </div>
                 `;
@@ -1672,8 +1724,24 @@ const TramaPages = {
   },
 
   renderLookbook: function() {
+    const isAdmin = TramaStore.isAdminLoggedIn();
+    const looks = TramaData.lookbook || [];
+
     return `
       <div class="container section-spacing-sm">
+        ${isAdmin ? `
+          <div style="background: var(--midnight); color: var(--offwhite); padding: 14px 20px; margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <span style="color: var(--vinho-400); font-weight: 700; font-size: 13px;">👑 Modo Administradora:</span>
+              <span style="font-size: 13px; color: var(--arctic);">Você pode adicionar novos ensaios ou editar as fotos e peças do Lookbook.</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <button class="btn btn-primary btn-sm" onclick="TramaApp.openLookEditor()">+ Novo Ensaio</button>
+              <a href="#/admin" class="btn btn-secondary btn-sm" style="color: var(--offwhite); border-color: var(--slopes);">Painel do Ateliê</a>
+            </div>
+          </div>
+        ` : ''}
+
         <div class="text-center" style="max-width: 680px; margin: 0 auto 48px auto;">
           <span class="caps-label text-muted">Campanhas Visuais</span>
           <h1 class="serif-italic" style="font-size: clamp(32px, 5vw, 54px); margin-top: 8px;">Lookbook: Compre o Look</h1>
@@ -1683,7 +1751,7 @@ const TramaPages = {
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 64px;">
-          ${TramaData.lookbook.map(lb => `
+          ${looks.map(lb => `
             <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 36px; align-items: center; border: 1px solid var(--slopes); padding: 24px; background: var(--card-bg);" class="lookbook-row">
               <div style="aspect-ratio: 4/5; overflow: hidden; position: relative;">
                 <img src="${lb.image || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=80'}" style="width: 100%; height: 100%; object-fit: cover;" alt="${lb.title}" />
@@ -1696,7 +1764,7 @@ const TramaPages = {
                 <div style="border-top: 1px solid var(--slopes); padding-top: 16px;">
                   <span class="caps-label" style="font-size: 11px; margin-bottom: 12px; display: block;">Peças Deste Look:</span>
                   <div style="display: flex; flex-direction: column; gap: 10px;">
-                    ${lb.items.map(it => `
+                    ${(lb.items || []).map(it => `
                       <a href="#/produto/${it.productId}" class="flex-between" style="padding: 10px 14px; border: 1px solid var(--slopes); background: var(--bg); font-size: 13px; font-weight: 600;">
                         <span>${it.title}</span>
                         <span style="color: var(--vinho-500);">Configurar →</span>
@@ -1704,6 +1772,13 @@ const TramaPages = {
                     `).join('')}
                   </div>
                 </div>
+
+                ${isAdmin ? `
+                  <div style="margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--slopes); display: flex; gap: 10px;">
+                    <button class="btn btn-secondary btn-sm" onclick="TramaApp.openLookEditor('${lb.id}')">✏️ Editar Este Ensaio</button>
+                    <button class="btn btn-secondary btn-sm" style="color: var(--vinho-500); border-color: var(--vinho-500);" onclick="TramaApp.deleteLookPrompt('${lb.id}')">🗑️ Excluir Ensaio</button>
+                  </div>
+                ` : ''}
               </div>
             </div>
           `).join('')}

@@ -141,10 +141,29 @@ const TramaData = {
       id: "look-dualidade-01",
       title: "O Silêncio da Forma",
       subtitle: "A estrutura do colete encontra o movimento da calça fluida em uma composição equilibrada.",
-      // image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=80",
+      image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1400&q=80",
       items: [
-        { productId: "colete-estruturado-alfaitaria", x: 48, y: 35, title: "Colete Estruturado em Alfaitaria" },
-        { productId: "calca-fluida-alfaiataria", x: 52, y: 70, title: "Calça Corte Fluido em Alfaitaria" }
+        { productId: "colete-estruturado-alfaitaria", x: 48, y: 35, title: "Colete Estruturado em Alfaiataria" },
+        { productId: "calca-fluida-alfaiataria", x: 52, y: 70, title: "Calça Corte Fluido em Alfaiataria" }
+      ]
+    },
+    {
+      id: "look-dualidade-02",
+      title: "O Peso e o Ar",
+      subtitle: "A geometria reta da jaqueta minimalista contrasta com a leveza translúcida da seda pura.",
+      image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1400&q=80",
+      items: [
+        { productId: "jaqueta-reta-minimalista", x: 50, y: 40, title: "Jaqueta Reta Minimalista" },
+        { productId: "camisa-fluida-seda", x: 50, y: 65, title: "Camisa Fluida em Pura Seda" }
+      ]
+    },
+    {
+      id: "look-dualidade-03",
+      title: "O Encontro do Linho",
+      subtitle: "Fluidez orgânica e corte milimétrico unidos no tom Off-White natural da fibra crua.",
+      image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=1400&q=80",
+      items: [
+        { productId: "vestido-fluido-transpassado", x: 50, y: 50, title: "Vestido Linho Transpassado" }
       ]
     }
   ],
