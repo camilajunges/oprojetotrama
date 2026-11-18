@@ -95,7 +95,9 @@ const TramaPages = {
               <h2 class="font-serif" style="margin-top: 6px;">Peças em Produção</h2>
             </div>
             <div style="display: flex; gap: 10px;">
-              <button class="btn btn-sm btn-secondary" onclick="TramaApp.openProductEditor()">+ Adicionar Nova Peça</button>
+              ${(TramaStore.isAdminLoggedIn() && TramaStore.state.adminDirectEdit) ? `
+                <button class="btn btn-sm btn-secondary" onclick="TramaApp.openProductEditor()">+ Adicionar Nova Peça</button>
+              ` : ''}
               <a href="#/sob-encomenda" class="btn btn-primary btn-sm">Ver Catálogo Completo</a>
             </div>
           </div>
@@ -273,15 +275,17 @@ const TramaPages = {
               </p>
             </div>
             
-            <!-- Ações Rápidas de CMS no Catálogo -->
-            <div style="display: flex; gap: 10px;">
-              <button class="btn btn-primary btn-sm" onclick="TramaApp.openProductEditor()">
-                + Adicionar Nova Peça à Venda
-              </button>
-              <a href="#/admin" class="btn btn-secondary btn-sm">
-                ⚙️ Modo Ateliê & Edição
-              </a>
-            </div>
+            <!-- Ações de CMS no Catálogo: Apenas para Administradora com Modo Rápido ativo -->
+            ${(TramaStore.isAdminLoggedIn() && TramaStore.state.adminDirectEdit) ? `
+              <div style="display: flex; gap: 10px;">
+                <button class="btn btn-primary btn-sm" onclick="TramaApp.openProductEditor()">
+                  + Adicionar Nova Peça à Venda
+                </button>
+                <a href="#/admin" class="btn btn-secondary btn-sm">
+                  ⚙️ Painel do Ateliê
+                </a>
+              </div>
+            ` : ''}
           </div>
 
           <!-- Barra de Filtros Combináveis & Ordenação -->
@@ -344,11 +348,13 @@ const TramaPages = {
             <span class="badge badge-sob-encomenda">Sob Encomenda</span>
           </div>
 
-          <!-- Botões de Ação no Card: Favorito & Editar -->
+          <!-- Botões de Ação no Card: Favorito (e Editar apenas se Administradora com Modo Rápido ativo) -->
           <div style="position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; z-index: 3;">
-            <button class="btn-favorite" onclick="event.stopPropagation(); TramaApp.openProductEditor('${product.id}')" title="Editar peça e fotos no site" style="position: static; font-size: 11px; width: auto; padding: 0 8px; height: 36px;">
-              ✏️ Editar
-            </button>
+            ${(TramaStore.isAdminLoggedIn() && TramaStore.state.adminDirectEdit) ? `
+              <button class="btn-favorite" onclick="event.stopPropagation(); TramaApp.openProductEditor('${product.id}')" title="Editar peça e fotos no site" style="position: static; font-size: 11px; width: auto; padding: 0 8px; height: 36px;">
+                ✏️ Editar
+              </button>
+            ` : ''}
             <button class="btn-favorite ${isFav ? 'active' : ''}" onclick="event.stopPropagation(); TramaStore.toggleWishlist('${product.id}');" title="Favoritar peça" style="position: static;">
               ${RabbitSVGs.icon('heart', 16)}
             </button>
@@ -382,16 +388,18 @@ const TramaPages = {
     return `
       <div class="container section-spacing-sm">
         
-        <!-- Barra de Ação Rápida de Edição do Ateliê -->
-        <div style="background: var(--card-bg-subtle); border: 1px solid var(--slopes); padding: 12px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="badge badge-sob-encomenda">Modo Ateliê</span>
-            <span style="font-size: 13px; color: var(--mountainside);">Deseja trocar as imagens ou alterar o preço e textos desta peça?</span>
+        <!-- Barra de Ação Rápida de Edição do Ateliê: Apenas para Administradora com Modo Rápido ativo -->
+        ${(TramaStore.isAdminLoggedIn() && TramaStore.state.adminDirectEdit) ? `
+          <div style="background: var(--card-bg-subtle); border: 1px solid var(--slopes); padding: 12px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge badge-sob-encomenda">Modo Ateliê Ativo</span>
+              <span style="font-size: 13px; color: var(--mountainside);">Deseja trocar as imagens ou alterar o preço e textos desta peça?</span>
+            </div>
+            <button class="btn btn-sm btn-primary" onclick="TramaApp.openProductEditor('${product.id}')">
+              ✏️ Editar Peça & Adicionar/Trocar Imagens
+            </button>
           </div>
-          <button class="btn btn-sm btn-primary" onclick="TramaApp.openProductEditor('${product.id}')">
-            ✏️ Editar Peça & Adicionar/Trocar Imagens
-          </button>
-        </div>
+        ` : ''}
 
         <!-- Breadcrumbs -->
         <nav style="font-size: 12px; color: var(--apres-ski); margin-bottom: 24px; text-transform: uppercase; letter-spacing: var(--tracking-caps);">
@@ -662,10 +670,14 @@ const TramaPages = {
   renderCheckout: function() {
     const cart = TramaStore.state.cart;
     const subtotal = TramaStore.getCartSubtotal();
-    const discount = TramaStore.state.coupon ? (subtotal * (TramaStore.state.coupon.discountPercent / 100)) : 0;
+    const couponPercent = TramaStore.state.coupon ? TramaStore.state.coupon.discountPercent : 0;
+    const couponDiscount = subtotal * (couponPercent / 100);
     const isFreeShipping = subtotal >= TramaData.brand.freeShippingThreshold;
     const shipping = isFreeShipping ? 0 : 28.00;
-    const total = subtotal - discount + shipping;
+    const selectedMethod = TramaApp.selectedPaymentMethod || 'pix';
+    const isPix = selectedMethod === 'pix';
+    const pixDiscount = isPix ? ((subtotal - couponDiscount) * 0.05) : 0;
+    const total = subtotal - couponDiscount - pixDiscount + shipping;
     const user = TramaStore.state.user || {};
 
     if (cart.length === 0) {
@@ -793,11 +805,13 @@ const TramaPages = {
                 </div>
 
                 <!-- Bloco Pix -->
-                <div id="pay-box-pix" style="padding: 16px; background-color: var(--card-bg-subtle); border: 1px solid var(--slopes);">
-                  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                    <span style="font-weight: 700; font-size: 14px; color: var(--vinho-500);">Desconto Especial de 5% Aplicado</span>
+                <div id="pay-box-pix" style="padding: 18px; background-color: var(--card-bg-subtle); border: 1px solid var(--midnight);">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-weight: 700; font-size: 14px; color: var(--vinho-500);">Desconto Especial de 5% Aplicado no Pix</span>
+                    <span style="font-weight: 700; font-size: 13px; color: var(--vinho-500);">Economia: R$ ${((subtotal - couponDiscount) * 0.05).toFixed(2)}</span>
                   </div>
-                  <p style="font-size: 13px; color: var(--mountainside);">Ao confirmar, você receberá a chave Copia e Cola e o QR Code oficial do Pix. O início da confecção da sua peça é agendado imediatamente após a confirmação bancária.</p>
+                  <p style="font-size: 13px; color: var(--mountainside); margin-bottom: 10px;">Ao confirmar, você receberá a chave Copia e Cola e o QR Code oficial do Pix. O início da confecção da sua peça é agendado imediatamente após a confirmação bancária.</p>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--midnight);">Total a pagar no Pix: <strong>R$ ${total.toFixed(2)}</strong></div>
                 </div>
 
                 <!-- Bloco Cartão -->
@@ -876,19 +890,23 @@ const TramaPages = {
                     <span>Subtotal</span>
                     <span>R$ ${subtotal.toFixed(2)}</span>
                   </div>
-                  ${discount > 0 ? `
+                  ${couponDiscount > 0 ? `
                     <div class="flex-between" style="color: var(--vinho-500); font-weight: 600;">
-                      <span>Desconto Cupom</span>
-                      <span>- R$ ${discount.toFixed(2)}</span>
+                      <span>Desconto Cupom (${couponPercent}%)</span>
+                      <span>- R$ ${couponDiscount.toFixed(2)}</span>
                     </div>
                   ` : ''}
+                  <div id="chk-pix-discount-row" class="flex-between" style="color: var(--vinho-500); font-weight: 600; display: ${isPix ? 'flex' : 'none'};">
+                    <span>Desconto Pix (-5%)</span>
+                    <span id="chk-pix-discount-val">- R$ ${((subtotal - couponDiscount) * 0.05).toFixed(2)}</span>
+                  </div>
                   <div class="flex-between">
                     <span>Frete Calculado</span>
                     <span>${isFreeShipping ? 'Grátis (Pedido > R$ 600)' : `R$ ${shipping.toFixed(2)}`}</span>
                   </div>
                   <div class="flex-between" style="font-size: 18px; font-weight: 700; border-top: 1px solid var(--slopes); padding-top: 12px; margin-top: 4px;">
                     <span>Total</span>
-                    <span>R$ ${total.toFixed(2)}</span>
+                    <span id="chk-total-display">R$ ${total.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -943,6 +961,30 @@ const TramaPages = {
             Agradecemos por escolher o slow fashion e apoiar a confecção consciente sem resíduos.
           </p>
         </div>
+
+        ${(order.paymentMethod && order.paymentMethod.includes('Pix')) ? `
+          <!-- Bloco Oficial de Pagamento Pix com Desconto de 5% -->
+          <div style="background: var(--bg); border: 2px solid var(--midnight); padding: 28px; margin-bottom: 40px; text-align: center;">
+            <span class="caps-label" style="color: var(--vinho-500); font-weight: 700;">Pagamento Instantâneo Pix • 5% de Desconto Aplicado</span>
+            <h2 class="serif-italic" style="font-size: 26px; margin: 8px 0 12px 0;">Finalize seu pagamento para iniciar o corte</h2>
+            <div style="font-size: 14px; color: var(--mountainside); max-width: 520px; margin: 0 auto 20px auto;">
+              Total com 5% off no Pix: <strong style="font-size: 22px; color: var(--midnight);">R$ ${order.total.toFixed(2)}</strong>
+            </div>
+
+            <!-- Código Pix Copia e Cola -->
+            <div style="max-width: 560px; margin: 0 auto 16px auto; background: var(--card-bg-subtle); border: 1px dashed var(--slopes); padding: 16px;">
+              <div style="font-family: monospace; font-size: 11px; color: var(--midnight); word-break: break-all; margin-bottom: 12px; background: var(--bg); padding: 10px; border: 1px solid var(--slopes); user-select: all;">
+                00020126580014BR.GOV.BCB.PIX0136oprojetotrama@gmail.com520400005303986540${order.total.toFixed(2)}5802BR5913PROJETO TRAMA6009SAO PAULO62070503***6304
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" onclick="TramaApp.copyPixCode('00020126580014BR.GOV.BCB.PIX0136oprojetotrama@gmail.com520400005303986540${order.total.toFixed(2)}5802BR5913PROJETO TRAMA6009SAO PAULO62070503***6304')" style="width: 100%; justify-content: center;">
+                📋 Copiar Código Pix Copia e Cola
+              </button>
+            </div>
+            <div style="font-size: 12px; color: var(--apres-ski);">
+              Chave Pix Oficial: <strong>oprojetotrama@gmail.com</strong> • Projeto Trama Confecções Artesanais
+            </div>
+          </div>
+        ` : ''}
 
         <!-- Linha do Tempo da Produção Artesanal -->
         <div style="background: var(--card-bg); border: 1px solid var(--slopes); padding: 36px 24px; margin-bottom: 48px;">
@@ -1256,17 +1298,92 @@ const TramaPages = {
   },
 
   // --------------------------------------------------------------------------
-  // 8. PAINEL ADMINISTRATIVO DO ATELIÊ & CMS DE CONTEÚDO E IMAGENS
+  // 8. PAINEL ADMINISTRATIVO DO ATELIÊ & CMS (EXCLUSIVO DA CONTA ADMIN)
   // --------------------------------------------------------------------------
   renderAdmin: function(adminTab = 'produtos') {
+    const adminCreds = TramaStore.getAdminAccount();
+
+    // 1. SE NÃO ESTIVER AUTENTICADA: EXIBIR TELA DE LOGIN DA ADMINISTRADORA
+    if (!TramaStore.isAdminLoggedIn()) {
+      return `
+        <div class="container section-spacing" style="max-width: 480px; margin: 40px auto; padding: 40px 24px;">
+          <div style="text-align: center; margin-bottom: 32px;">
+            <div style="display: inline-block; margin-bottom: 16px;">
+              ${RabbitSVGs.rabbitTapping("#090F15", "#4D0C0C", 64)}
+            </div>
+            <span class="caps-label" style="color: var(--vinho-500); font-weight: 700;">Área Restrita • Projeto Trama</span>
+            <h1 class="serif-italic" style="font-size: 32px; margin-top: 6px;">Acesso da Administradora</h1>
+            <p style="font-size: 14px; color: var(--mountainside); margin-top: 8px;">
+              Apenas a conta de administradora pode gerenciar o catálogo, alterar fotos e editar dados das peças.
+            </p>
+          </div>
+
+          <div style="border: 1px solid var(--midnight); padding: 32px; background: var(--bg);">
+            <form onsubmit="event.preventDefault(); TramaApp.submitAdminLogin();">
+              <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" for="admin-email-input">E-mail da Administradora</label>
+                <input type="text" id="admin-email-input" class="form-input" placeholder="Ex: ${adminCreds.email}" value="${adminCreds.email}" required autofocus style="font-size: 14px;" />
+              </div>
+
+              <div class="form-group" style="margin-bottom: 24px;">
+                <label class="form-label" for="admin-password-input">Senha de Acesso</label>
+                <div style="position: relative;">
+                  <input type="password" id="admin-password-input" class="form-input" placeholder="Digite sua senha..." autocomplete="current-password" required style="padding-right: 40px; font-size: 15px;" />
+                  <button type="button" onclick="const input = document.getElementById('admin-password-input'); input.type = input.type === 'password' ? 'text' : 'password';" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--apres-ski); font-size: 14px;" title="Mostrar/ocultar senha">👁️</button>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; justify-content: center; font-size: 13px;">
+                Entrar no Painel do Ateliê →
+              </button>
+
+              <div style="margin-top: 18px; padding: 12px; background: var(--card-bg-subtle); border-left: 2px solid var(--vinho-500); font-size: 12px; color: var(--apres-ski);">
+                🔒 <strong>Conta pré-configurada:</strong><br/>
+                E-mail: <code>${adminCreds.email}</code><br/>
+                Senha: <code>${adminCreds.password}</code> (ou <code>trama2026</code>)<br/>
+                <em>Você pode alterar seu e-mail e senha na aba "⚙️ Conta da Administradora".</em>
+              </div>
+            </form>
+          </div>
+
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="#/" style="font-size: 13px; color: var(--mountainside); text-decoration: underline;">← Voltar para a vitrine pública</a>
+          </div>
+        </div>
+      `;
+    }
+
+    // 2. SE ESTIVER AUTENTICADA: EXIBIR O PAINEL DE CONTROLE COMPLETO
     const orders = TramaStore.state.orders;
     const products = TramaData.products;
     const capacity = TramaStore.state.weeklyCapacity;
     const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+    const directEditActive = TramaStore.state.adminDirectEdit;
 
     return `
       <div class="container section-spacing-sm">
         
+        <!-- Barra de Status do Modo Administradora -->
+        <div style="background: var(--midnight); color: var(--offwhite); padding: 12px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="color: var(--vinho-400); font-weight: 700; font-size: 14px;">👑 Administradora Conectada:</span>
+            <span style="font-size: 13px; color: var(--arctic);">${adminCreds.name} (${adminCreds.email})</span>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <!-- Alternador de Edição Rápida na Vitrine -->
+            <button class="btn btn-sm ${directEditActive ? 'btn-primary' : 'btn-secondary'}" onclick="TramaApp.toggleDirectEditMode()" style="font-size: 11px; padding: 4px 10px;" title="Quando ativado, botões de edição rápida aparecem nos cards da vitrine pública">
+              ${directEditActive ? '🟢 Edição na Vitrine: ATIVADA' : '⚪ Edição na Vitrine: DESATIVADA'}
+            </button>
+            <a href="#/" class="btn btn-sm btn-secondary" style="font-size: 11px; padding: 4px 10px; color: var(--offwhite); border-color: var(--slopes);">
+              👁️ Ver Vitrine Pública
+            </a>
+            <button class="btn btn-sm btn-secondary" onclick="TramaApp.handleAdminLogout()" style="font-size: 11px; padding: 4px 10px; color: var(--vinho-400); border-color: var(--vinho-500);">
+              🚪 Sair do Painel
+            </button>
+          </div>
+        </div>
+
         <!-- Cabeçalho do Painel -->
         <div class="flex-between flex-wrap gap-sm" style="border-bottom: 2px solid var(--midnight); padding-bottom: 16px; margin-bottom: 28px;">
           <div>
@@ -1313,6 +1430,9 @@ const TramaPages = {
           </button>
           <button class="tab-nav-btn ${adminTab === 'conteudo' ? 'active' : ''}" onclick="TramaApp.switchAdminTab('conteudo')">
             🎨 Textos & Banners do Site
+          </button>
+          <button class="tab-nav-btn ${adminTab === 'conta' ? 'active' : ''}" onclick="TramaApp.switchAdminTab('conta')">
+            ⚙️ Conta da Administradora
           </button>
         </div>
 
@@ -1361,7 +1481,6 @@ const TramaPages = {
             </div>
           </div>
         </div>
-
 
         <!-- ABA 2: FILA DE PRODUÇÃO (PEDIDOS) -->
         <div id="admin-tab-pedidos" style="${adminTab === 'pedidos' ? '' : 'display: none;'}">
@@ -1414,6 +1533,43 @@ const TramaPages = {
             </p>
           </div>
         </div>
+
+        <!-- ABA 4: CONFIGURAÇÃO DA CONTA DE ADMINISTRADORA -->
+        <div id="admin-tab-conta" style="${adminTab === 'conta' ? '' : 'display: none;'}">
+          <div style="background: var(--card-bg); border: 1px solid var(--midnight); padding: 32px; max-width: 680px;">
+            <span class="caps-label" style="color: var(--vinho-500); font-weight: 700;">Segurança & Credenciais</span>
+            <h2 class="font-serif" style="font-size: 26px; margin: 6px 0 16px 0;">Conta de Administradora do Site</h2>
+            <p style="font-size: 14px; color: var(--mountainside); line-height: 1.6; margin-bottom: 24px;">
+              Aqui você altera o e-mail e a senha que têm permissão para acessar o painel e gerenciar os produtos e fotos. Visitantes comuns do site nunca terão acesso a essas ferramentas.
+            </p>
+
+            <form onsubmit="event.preventDefault(); TramaApp.saveAdminAccountSettings();">
+              <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" for="cfg-admin-name">Nome da Proprietária / Administradora</label>
+                <input type="text" id="cfg-admin-name" value="${adminCreds.name}" required class="form-input" />
+              </div>
+
+              <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label" for="cfg-admin-email">E-mail Oficial de Acesso da Administradora</label>
+                <input type="email" id="cfg-admin-email" value="${adminCreds.email}" required class="form-input" />
+                <span style="font-size: 11px; color: var(--apres-ski);">Apenas logins com este e-mail serão autorizados a editar o site.</span>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 28px;">
+                <label class="form-label" for="cfg-admin-pass">Senha de Acesso</label>
+                <input type="text" id="cfg-admin-pass" value="${adminCreds.password}" required class="form-input" />
+                <span style="font-size: 11px; color: var(--apres-ski);">Defina a senha que você usará para entrar no ateliê.</span>
+              </div>
+
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <button type="submit" class="btn btn-primary">
+                  Salvar Nova Conta de Administradora
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
       </div>
     `;
   },

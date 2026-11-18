@@ -554,26 +554,49 @@ const TramaApp = {
   },
 
   // --------------------------------------------------------------------------
-  // CONTROLE DE ACESSO DO ATELIÊ (LOGIN, LOGOUT, TOGGLE EDIÇÃO)
+  // CONTROLE DE ACESSO DO ATELIÊ (LOGIN, LOGOUT, CONFIGURAÇÃO DA CONTA ADMIN)
   // --------------------------------------------------------------------------
   submitAdminLogin: function() {
-    const input = document.getElementById('admin-password-input');
-    const pwd = input ? input.value : '';
-    if (!pwd) {
-      this.showToast("Digite a senha de acesso do ateliê.", "error");
+    const userElem = document.getElementById('admin-email-input');
+    const passElem = document.getElementById('admin-password-input');
+    const user = userElem ? userElem.value.trim() : '';
+    const pass = passElem ? passElem.value.trim() : '';
+
+    if (!user || !pass) {
+      this.showToast("Informe o e-mail/usuário e a senha de administradora.", "error");
       return;
     }
-    const success = TramaStore.adminLogin(pwd);
+
+    const success = TramaStore.adminLogin(user, pass);
     if (success) {
       this.showToast("Acesso autorizado! Bem-vinda ao Painel do Ateliê.");
       this.updateAdminHeaderBadge();
       this.refreshCurrentRoute();
     } else {
-      this.showToast("Senha incorreta. Tente novamente.", "error");
-      if (input) {
-        input.value = '';
-        input.focus();
+      this.showToast("E-mail ou senha de administradora incorretos.", "error");
+      if (passElem) {
+        passElem.value = '';
+        passElem.focus();
       }
+    }
+  },
+
+  saveAdminAccountSettings: function() {
+    const email = document.getElementById('cfg-admin-email')?.value.trim();
+    const pass = document.getElementById('cfg-admin-pass')?.value.trim();
+    const name = document.getElementById('cfg-admin-name')?.value.trim();
+
+    if (!email || !pass) {
+      this.showToast("Preencha o e-mail e a nova senha de administradora.", "error");
+      return;
+    }
+
+    const updated = TramaStore.updateAdminAccount(email, pass, name);
+    if (updated) {
+      this.showToast("Dados da conta de administradora atualizados com sucesso!");
+      this.refreshCurrentRoute();
+    } else {
+      this.showToast("Erro ao salvar conta de administradora.", "error");
     }
   },
 

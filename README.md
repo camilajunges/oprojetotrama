@@ -6,29 +6,42 @@ Agora equipada com **Painel Visual de CMS integrado**: você pode **adicionar no
 
 ---
 
-## 📸 Como Alterar Conteúdos e Adicionar Fotos no Próprio Site
+## 👑 Área Exclusiva da Administradora & Gestão de Peças
 
-Você não precisa alterar o arquivo de código para cadastrar peças ou mudar fotos. Tudo é feito visualmente no próprio navegador e salvo automaticamente no seu navegador (`localStorage`):
+A vitrine pública da loja é **100% limpa e exclusiva para os clientes**: visitantes comuns **NÃO veem nenhum botão de editar, nem de adicionar peças**. 
 
-### 1. Adicionar uma Nova Peça à Venda:
-- Clique no botão **`+ Adicionar Nova Peça à Venda`** presente no topo do Catálogo (`#/sob-encomenda`), na Home ou no **Modo Ateliê** (`#/admin`).
-- Preencha o nome, preço, prazo de confecção, tecidos e descrição.
-- Clique em **`📁 Escolher Foto do Computador`** para selecionar fotos do seu PC (PNG, JPG, WebP) ou cole links de imagens da internet.
-- Clique em **Salvar no Catálogo**. A peça aparecerá imediatamente na loja!
+As ferramentas de alteração e adição de peças estão **bloqueadas para a conta de administradora**.
 
-### 2. Mudar ou Adicionar Imagens em uma Peça Existente:
-- Em qualquer card de produto ou na página do produto (PDP), clique no botão **`✏️ Editar`** ou **`✏️ Editar Peça & Adicionar/Trocar Imagens`**.
-- O editor abrirá com as fotos atuais.
-- Você pode:
-  - Subir novas fotos do computador.
-  - Clicar em **Definir Capa** para escolher qual será a foto principal.
-  - Remover fotos indesejadas clicando no `✕`.
-  - Trocar o preço ou textos da modelagem.
-- Ao salvar, a atualização é instantânea em toda a loja!
+### 1. Como a Administradora Acessa o Painel:
+- No rodapé da loja, há um link discreto **`Acesso Ateliê`** (ou acesse diretamente pelo link `index.html#/admin`).
+- Digite os dados da sua conta de administradora:
+  - **E-mail padrão:** `oprojetotrama@gmail.com` (ou usuário `admin`)
+  - **Senha padrão:** `trama2026` (ou `admin`)
+- Clique em **Entrar no Painel do Ateliê**.
 
-### 3. Alterar Textos Gerais do Site (Hero, Banners e Sustentabilidade):
-- Acesse o **Modo Ateliê** (`#/admin`) pelo botão no cabeçalho ou vá na aba **Textos & Banners do Site**.
-- Clique em **`✏️ Editar Textos da Loja`** para mudar a frase do Hero Fluido, do Hero Reto ou a barra de aviso de frete grátis.
+### 2. Como Alterar o E-mail e Senha da Administradora:
+- No painel administrativo (`#/admin`), clique na aba **`⚙️ Conta da Administradora`**.
+- Lá você pode alterar seu **Nome**, seu **E-mail oficial** e a sua **Senha de acesso**.
+- Clique em **Salvar Nova Conta de Administradora**. A partir de então, apenas você com suas novas credenciais poderá acessar o painel!
+
+### 3. Como Cadastrar Novas Peças ou Trocar Fotos:
+- No Painel (`#/admin`), na aba **`🛍️ Gestão de Peças & Imagens`**:
+  - Clique em **`+ Adicionar Nova Peça à Venda`** para cadastrar um novo produto.
+  - Ou clique em **`✏️ Editar / Fotos`** em qualquer peça existente.
+  - Para as fotos:
+    - Arraste arquivos de imagem direto do computador ou clique em **`📁 Escolher Fotos do Computador`**.
+    - Reordene fotos usando as setas `◀` e `▶`.
+    - Defina qual será a foto de capa clicando em **`⭐ Capa`**.
+  - O preço aceita vírgula ou ponto (ex: `480` ou `480,00`).
+  - Ao salvar, as alterações entram no ar imediatamente na vitrine pública!
+
+---
+
+## ⚡ Desconto Especial no Pix (-5% Off)
+
+- Ao selecionar **Pix** na etapa 3 do checkout, o desconto de 5% é **calculado e abatido automaticamente em tempo real** do total da compra.
+- Ao clicar em confirmar, o cliente recebe o código oficial **Pix Copia e Cola** com o valor exato descontado e um botão com 1 clique para copiar a chave.
+- No carrinho lateral e na página da peça, o valor com 5% de desconto no Pix também é destacado para incentivar a conversão.
 
 ---
 

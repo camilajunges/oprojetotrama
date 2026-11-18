@@ -193,16 +193,62 @@ const TramaStore = {
   },
 
   // --------------------------------------------------------------------------
-  // CONTROLE DE ACESSO DA DONA DO SITE (ADMIN AUTH)
+  // CONTROLE DE ACESSO DA DONA DO SITE (ADMIN AUTH & CONTA ESPECÍFICA)
   // --------------------------------------------------------------------------
+  getAdminAccount: function() {
+    const saved = this._getStorage('trama_admin_account');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.email && parsed.password) return parsed;
+      } catch (e) {}
+    }
+    // Conta padrão configurada da criadora / ateliê
+    return {
+      email: "oprojetotrama@gmail.com",
+      password: "admin", // Também aceita "trama2026"
+      name: "Camila Guimarães (Proprietária)"
+    };
+  },
+
+  updateAdminAccount: function(newEmail, newPassword, newName) {
+    if (!newEmail || !newPassword) return false;
+    const current = this.getAdminAccount();
+    const updated = {
+      email: newEmail.trim().toLowerCase(),
+      password: newPassword.trim(),
+      name: (newName || current.name).trim()
+    };
+    this._setStorage('trama_admin_account', JSON.stringify(updated));
+    this.notifyUpdate('adminAccount');
+    return true;
+  },
+
   isAdminLoggedIn: function() {
     return this.state.isAdmin === true;
   },
 
-  adminLogin: function(password) {
-    const clean = (password || '').trim().toLowerCase();
-    // Senha padrão da dona do ateliê
-    if (clean === "trama2026" || clean === "admin" || clean === "atelie" || clean === "ateliê" || clean === "trama") {
+  adminLogin: function(emailOrUser, password) {
+    const creds = this.getAdminAccount();
+    const inputUser = (emailOrUser || '').trim().toLowerCase();
+    const inputPass = (password || '').trim();
+
+    // Permite login pelo email específico ou usuário 'admin'
+    const isUserValid = (
+      inputUser === creds.email.toLowerCase() ||
+      inputUser === 'admin' ||
+      inputUser === 'atelie' ||
+      inputUser === 'trama'
+    );
+
+    // Senha específica cadastrada pela proprietária (ou senha mestre 'trama2026' / 'admin')
+    const isPassValid = (
+      inputPass === creds.password ||
+      inputPass === 'trama2026' ||
+      (creds.password === 'admin' && inputPass === 'admin')
+    );
+
+    if (isUserValid && isPassValid) {
       this.state.isAdmin = true;
       this._setStorage('trama_is_admin', 'true');
       this.notifyUpdate('adminAuth');
